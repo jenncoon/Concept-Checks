@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<!-- Ghost Controller: Operation Clean Sweep. Copyright (c) 2026 Jennifer Coon, CIA, CFE. All rights reserved. Free to use with students for non-commercial educational purposes. Redistribution or sale requires written permission: jcoonconsulting@gmail.com -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Controller: Operation Clean Sweep</title>
+<meta name="author" content="Jennifer Coon">
+<meta name="copyright" content="&copy; 2026 Jennifer Coon. All rights reserved.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap');
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+:root {
+  --paper:    #f2ead8;
+  --paper-dk: #e8ddc8;
+  --paper-lt: #faf7f0;
+  --ink:      #1c1812;
+  --navy:     #1a2744;
+  --navy-lt:  #253660;
+  --red:      #8b1a1a;
+  --red-lt:   #f9ecec;
+  --gold:     #b8860b;
+  --gold-lt:  #fdf6e3;
+  --green:    #1a4d2e;
+  --green-lt: #e8f4ee;
+  --stamp:    #7b1c1c;
+  --mid:      #c8b89a;
+  --focus:    #f5c518;
+  --shadow:   rgba(28,24,18,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #2a2010;
+  min-height: 100vh;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* wood grain bg */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background: repeating-linear-gradient(
+    92deg,
+    transparent, transparent 60px,
+    rgba(255,255,255,0.012) 60px, rgba(255,255,255,0.012) 61px
+  );
+}
+
+.skip-link { position:absolute; top:-100px; left:0; background:var(--focus); color:var(--ink); font-weight:700; padding:10px 16px; z-index:9999; text-decoration:none; font-size:0.9rem; }
+.skip-link:focus { top:0; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+/* ── HEADER ── */
+header {
+  position:relative; z-index:10;
+  background: var(--navy);
+  border-bottom: 4px solid var(--gold);
+  padding: 0;
+}
+
+.header-top {
+  padding: 12px 24px 10px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+
+.case-file-label {
+  font-family: 'Special Elite', cursive;
+  font-size: 0.65rem; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--gold); display: block; margin-bottom: 2px;
+}
+
+h1 {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  color: white; letter-spacing: 1px; line-height: 1.2;
+}
+
+h1 em {
+  font-style: normal; color: var(--gold);
+}
+
+.classified-stamp {
+  font-family: 'Special Elite', cursive;
+  font-size: 0.72rem; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--stamp); border: 2px solid var(--stamp);
+  padding: 4px 12px; border-radius: 2px;
+  transform: rotate(-2deg); display: inline-block;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+/* Progress bar */
+.progress-bar-wrap {
+  background: rgba(0,0,0,0.3);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+
+.phase-pips {
+  display: flex; gap: 6px; align-items: center;
+}
+
+.pip {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Special Elite', cursive; font-size: 0.78rem;
+  border: 2px solid; transition: all 0.3s; cursor: default;
+  position: relative;
+}
+.pip.locked   { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.50); } /* was 0.25 (2.24:1) → now 4.83:1 */
+.pip.active   { background: var(--gold); border-color: var(--gold); color: var(--navy); font-weight: 700; box-shadow: 0 0 10px rgba(184,134,11,0.5); }
+.pip.complete { background: var(--green); border-color: var(--green); color: white; }
+
+.pip-connector {
+  width: 20px; height: 2px;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.3s;
+}
+.pip-connector.lit { background: var(--green); }
+
+.progress-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.85rem; color: rgba(255,255,255,0.75);
+  margin-left: auto;
+}
+
+/* ── MAIN CONTENT AREA ── */
+main {
+  position: relative; z-index: 1;
+  max-width: 860px; margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── CASE FILE CARD ── */
+.case-card {
+  background: var(--paper);
+  border-radius: 3px;
+  box-shadow: 0 4px 20px var(--shadow), 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid var(--mid);
+}
+
+/* Red top tape strip */
+.case-card::before {
+  content: 'CONFIDENTIAL — NORTHSTAR FORENSIC ADVISORY — FRAUD INVESTIGATION';
+  display: block;
+  background: var(--red);
+  color: rgba(255,255,255,0.85);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem; letter-spacing: 3px; text-transform: uppercase;
+  padding: 4px 16px; text-align: center;
+}
+
+.card-header {
+  background: var(--navy);
+  padding: 14px 20px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  border-bottom: 3px solid var(--gold);
+}
+
+.phase-tag {
+  font-family: 'Special Elite', cursive;
+  font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold); display: block; margin-bottom: 3px;
+}
+
+.card-header h2 {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  color: white; line-height: 1.3;
+}
+
+.phase-num-badge {
+  background: var(--gold);
+  color: var(--navy);
+  font-family: 'Special Elite', cursive;
+  font-size: 1.3rem; font-weight: 700;
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.card-body { padding: 22px 24px; }
+
+/* Investigator note */
+.inv-note {
+  background: var(--gold-lt);
+  border-left: 5px solid var(--gold);
+  border-radius: 0 3px 3px 0;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 0.95rem; line-height: 1.7;
+  color: #3a2800;
+}
+.inv-note-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold); display: block; margin-bottom: 5px;
+}
+
+/* Section headers inside cards */
+.section-head {
+  font-family: 'Special Elite', cursive;
+  font-size: 1.05rem; color: var(--navy);
+  border-bottom: 2px solid var(--mid);
+  padding-bottom: 5px; margin: 18px 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-head::before {
+  content: 'Section:'; font-size: 0.9rem;
+}
+
+/* Starting balances */
+.balances-row {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+}
+.balance-chip {
+  background: var(--paper-dk);
+  border: 1px solid var(--mid); border-radius: 3px;
+  padding: 7px 14px;
+  font-family: 'Courier Prime', monospace; font-size: 0.9rem;
+}
+.balance-chip strong { color: var(--navy); }
+
+/* Transaction list */
+.tx-list { list-style: none; padding: 0; margin-bottom: 16px; }
+.tx-list li {
+  padding: 8px 12px;
+  border-bottom: 1px dashed var(--mid);
+  font-size: 0.95rem; line-height: 1.6;
+  display: flex; gap: 12px;
+}
+.tx-list li:last-child { border-bottom: none; }
+.tx-text { flex: 1 1 auto; min-width: 0; }
+.tx-date {
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700; color: var(--navy);
+  min-width: 72px; flex-shrink: 0;
+}
+
+/* ── SCAFFOLDING FIELDS ── */
+
+/* Journal entry table */
+.je-table {
+  width: 100%; border-collapse: collapse;
+  margin-bottom: 16px; font-size: 0.88rem;
+}
+.je-table th {
+  background: var(--navy); color: white;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.82rem; letter-spacing: 1px; text-transform: uppercase;
+  padding: 7px 10px; text-align: left; border: 1px solid var(--navy-lt);
+}
+.je-table td {
+  border: 1px solid var(--mid);
+  padding: 5px 6px;
+  background: var(--paper-lt);
+}
+.je-table tr:nth-child(even) td { background: var(--paper-dk); }
+.je-table input[type="text"] {
+  width: 100%; background: transparent; border: none; border-bottom: 1px dashed var(--mid);
+  font-family: 'Courier Prime', monospace; font-size: 0.88rem; color: var(--ink);
+  padding: 2px 4px; outline: none;
+}
+.je-table input[type="text"]:focus { border-bottom-color: var(--navy); background: rgba(26,39,68,0.05); }
+.indent { padding-left: 24px !important; }
+
+/* T-account grid */
+.t-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px; margin-bottom: 16px;
+}
+.t-account {
+  border: 2px solid var(--mid);
+  border-radius: 3px; overflow: hidden;
+  background: var(--paper-lt);
+}
+.t-account-name {
+  background: var(--navy); color: white;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+  padding: 5px 8px; text-align: center; text-transform: uppercase;
+}
+.t-account-body {
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+.t-col {
+  padding: 4px 6px; min-height: 70px;
+}
+.t-col:first-child { border-right: 2px solid var(--mid); }
+.t-col-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem; color: #4a4030; text-align: center;
+  display: block; margin-bottom: 4px; text-transform: uppercase;
+}
+.t-col input {
+  width: 100%; background: transparent; border: none;
+  border-bottom: 1px dashed var(--mid);
+  font-family: 'Courier Prime', monospace; font-size: 0.82rem;
+  color: var(--ink); padding: 2px 2px; outline: none;
+  margin-bottom: 3px; display: block;
+}
+.t-col input:focus { border-bottom-color: var(--navy); background: rgba(26,39,68,0.05); }
+.t-balance {
+  grid-column: 1 / -1;
+  border-top: 2px solid var(--mid);
+  padding: 4px 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.t-balance-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem; color: #4a4030; text-transform: uppercase;
+}
+.t-balance input {
+  flex: 1; background: var(--gold-lt);
+  border: 1px solid var(--gold); border-radius: 2px;
+  font-family: 'Courier Prime', monospace; font-size: 0.88rem; font-weight: 700;
+  color: var(--navy); padding: 3px 6px; outline: none;
+}
+.t-balance input:focus { border-color: var(--navy); }
+
+/* Trial balance table */
+.tb-table {
+  width: 100%; border-collapse: collapse;
+  margin-bottom: 16px; font-size: 0.88rem;
+}
+.tb-table th {
+  background: var(--navy); color: white;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase;
+  padding: 8px 12px; text-align: left;
+  border: 1px solid var(--navy-lt);
+}
+.tb-table th:not(:first-child) { text-align: center; }
+.tb-table td {
+  border: 1px solid var(--mid); padding: 5px 8px;
+  background: var(--paper-lt);
+}
+.tb-table tr:nth-child(even) td { background: var(--paper-dk); }
+.tb-table .total-row td {
+  background: var(--navy); color: white;
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  border-color: var(--navy-lt);
+}
+.tb-table input {
+  width: 100%; background: transparent; border: none;
+  border-bottom: 1px dashed var(--mid);
+  font-family: 'Courier Prime', monospace; font-size: 0.88rem;
+  color: var(--ink); padding: 2px 4px; text-align: right; outline: none;
+}
+.tb-table input:focus { border-bottom-color: var(--navy); }
+.tb-table .total-row input {
+  color: white; border-bottom-color: rgba(255,255,255,0.3);
+}
+
+/* Classify checkboxes */
+.classify-list {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+}
+.classify-item {
+  background: var(--paper-dk);
+  border: 2px solid var(--mid); border-radius: 3px;
+  padding: 6px 12px;
+  font-family: 'Courier Prime', monospace; font-size: 0.85rem;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: all 0.15s;
+}
+.classify-item:hover { border-color: var(--navy); }
+.classify-item input { cursor: pointer; accent-color: var(--navy); width: 15px; height: 15px; }
+
+.calc-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.calc-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.9rem; min-width: 260px;
+}
+.calc-input {
+  border: 1px solid var(--mid); border-radius: 3px;
+  padding: 6px 12px;
+  font-family: 'Courier Prime', monospace; font-size: 0.95rem;
+  background: var(--paper-lt); color: var(--ink);
+  width: 140px; outline: none;
+}
+.calc-input:focus { border-color: var(--navy); background: white; }
+
+/* Closing entries */
+.closing-entry {
+  background: var(--paper-dk);
+  border: 1px solid var(--mid); border-radius: 3px;
+  padding: 12px 16px; margin-bottom: 10px;
+}
+.closing-entry-title {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.875rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--navy); margin-bottom: 8px; display: block;
+}
+.closing-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.closing-row label {
+  font-family: 'Courier Prime', monospace; font-size: 0.85rem;
+  min-width: 60px;
+}
+.closing-row input[type="text"] {
+  border: 1px solid var(--mid); border-radius: 2px;
+  padding: 4px 8px;
+  font-family: 'Courier Prime', monospace; font-size: 0.88rem;
+  background: var(--paper-lt); color: var(--ink);
+  flex: 1; max-width: 200px; outline: none;
+}
+.closing-row input:focus { border-color: var(--navy); }
+
+/* ── VAULT SECTION ── */
+
+.vault-visible-label {
+  display: block;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+.vault-section {
+  background: var(--navy);
+  border-radius: 3px; padding: 20px 22px; margin-top: 24px;
+  border: 2px solid var(--gold);
+  position: relative;
+}
+
+.vault-section::before {
+  content: 'VAULT';
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  font-family: 'Special Elite', cursive; font-size: 0.7rem; letter-spacing: 3px;
+  color: var(--gold); background: var(--navy); padding: 0 10px;
+}
+
+.vault-title {
+  font-family: 'Special Elite', cursive;
+  font-size: 1.1rem; color: var(--gold);
+  text-align: center; margin-bottom: 4px; margin-top: 4px;
+}
+
+.vault-question {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.92rem; color: rgba(255,255,255,0.85);
+  text-align: center; margin-bottom: 16px; line-height: 1.6;
+}
+
+.vault-input-row {
+  display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
+}
+
+.vault-input {
+  border: 2px solid var(--gold); border-radius: 3px;
+  padding: 10px 16px;
+  font-family: 'Special Elite', cursive; font-size: 1.3rem;
+  background: rgba(255,255,255,0.07); color: white;
+  width: 180px; text-align: center; outline: none;
+  letter-spacing: 2px;
+}
+.vault-input::placeholder { color: rgba(255,255,255,0.35); font-size: 0.9rem; letter-spacing: 0; } /* was 0.25 (2.24:1) → now 3.00:1 */
+.vault-input:focus { border-color: white; background: rgba(255,255,255,0.12); }
+
+.vault-btn {
+  padding: 10px 24px;
+  background: var(--gold); border: none; border-radius: 3px;
+  font-family: 'Special Elite', cursive; font-size: 1rem;
+  color: var(--navy); cursor: pointer; font-weight: 700;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.vault-btn:hover { background: #d4a010; }
+.vault-btn:active { transform: scale(0.97); }
+
+/* Feedback */
+.vault-feedback {
+  margin-top: 14px;
+  border-radius: 3px; padding: 12px 16px;
+  font-family: Georgia, serif; font-size: 0.92rem; line-height: 1.65;
+  display: none; text-align: left;
+}
+.vault-feedback.show { display: block; }
+.vault-feedback.wrong {
+  background: rgba(139,26,26,0.25); border-left: 4px solid #e57373; color: #ffd4d4;
+}
+.vault-feedback.correct {
+  background: rgba(26,77,46,0.35); border-left: 4px solid #81c784; color: #d4f4dc;
+}
+.vault-feedback strong { font-family: 'Courier Prime', monospace; }
+.feedback-hint-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+  display: block; margin-bottom: 5px; opacity: 0.7;
+}
+
+/* Unlock animation */
+@keyframes unlockPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(184,134,11,0.6); }
+  70%  { box-shadow: 0 0 0 16px rgba(184,134,11,0); }
+  100% { box-shadow: 0 0 0 0 rgba(184,134,11,0); }
+}
+.vault-section.unlocked { animation: unlockPulse 0.6s ease-out; border-color: #81c784; }
+.vault-section.unlocked::before { content: ''; }
+
+.next-btn {
+  display: none; margin: 16px auto 0; padding: 12px 32px;
+  background: var(--green); border: 2px solid #81c784; border-radius: 3px;
+  font-family: 'Special Elite', cursive; font-size: 1rem;
+  color: white; cursor: pointer; letter-spacing: 1px;
+  transition: background 0.15s; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.next-btn:hover { background: #245c38; }
+.next-btn.show { display: block; }
+
+/* attempt counter */
+.attempt-count {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.85rem; color: rgba(255,255,255,0.65);
+  text-align: center; margin-top: 8px;
+}
+
+
+input:focus-visible,
+button:focus-visible,
+.vault-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+input:focus:not(:focus-visible) { outline: none; }
+
+/* ── BRIEFING SCREEN ── */
+.briefing-card {
+  background: var(--paper);
+  border-radius: 3px;
+  box-shadow: 0 4px 20px var(--shadow);
+  overflow: hidden;
+  border: 1px solid var(--mid);
+}
+.briefing-card::before {
+  content: 'CLASSIFIED — FORENSIC ACCOUNTING UNIT — OPERATION CLEAN SWEEP';
+  display: block; background: var(--red); color: rgba(255,255,255,0.85);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem; letter-spacing: 3px; text-transform: uppercase;
+  padding: 4px 16px; text-align: center;
+}
+.briefing-header {
+  background: var(--navy); padding: 20px 28px;
+  border-bottom: 3px solid var(--gold);
+  display: flex; align-items: center; gap: 20px;
+}
+.briefing-icon { display: none; }
+.briefing-header h2 {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(1.2rem, 3vw, 1.8rem); color: white; line-height: 1.3;
+}
+.briefing-header p {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.8rem; color: var(--gold); margin-top: 4px; letter-spacing: 1px;
+}
+.briefing-body { padding: 28px 32px; }
+.briefing-body p {
+  font-size: 1rem; line-height: 1.8; margin-bottom: 14px; color: var(--ink);
+}
+.briefing-body strong { color: var(--navy); }
+.briefing-body em { color: var(--red); font-style: italic; }
+
+.mission-box {
+  background: var(--navy); border-radius: 3px;
+  padding: 16px 20px; margin: 20px 0;
+  border-left: 5px solid var(--gold);
+}
+.mission-box p {
+  color: rgba(255,255,255,0.9) !important;
+  font-family: 'Courier Prime', monospace; font-size: 0.92rem !important;
+  line-height: 1.7 !important;
+}
+.mission-box strong { color: var(--gold) !important; }
+
+.instructions-list {
+  list-style: none; padding: 0; margin: 16px 0;
+}
+.instructions-list li {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px dashed var(--mid); font-size: 0.95rem; line-height: 1.7;
+  align-items: flex-start;
+}
+.instructions-list li:last-child { border-bottom: none; }
+
+.inst-text {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.inst-text strong { color: var(--navy); }
+
+.inst-num {
+  background: var(--navy); color: var(--gold);
+  font-family: 'Special Elite', cursive; font-size: 0.9rem;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.start-btn {
+  display: block; margin: 24px auto 0; padding: 14px 48px;
+  background: var(--red); border: 2px solid #c0392b; border-radius: 3px;
+  font-family: 'Special Elite', cursive; font-size: 1.15rem;
+  color: white; cursor: pointer; letter-spacing: 2px;
+  transition: background 0.15s; box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+}
+.start-btn:hover { background: #a11515; }
+
+
+/* ── BACK NAVIGATION ── */
+.pip.complete {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pip.complete:hover {
+  background: #4a9060;
+  box-shadow: 0 0 8px rgba(26,77,46,0.6);
+  transform: scale(1.1);
+}
+.pip.complete:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.pip-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.phase-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--mid);
+  gap: 12px;
+}
+.back-btn {
+  padding: 10px 22px;
+  background: var(--paper-dk);
+  border: 2px solid var(--navy);
+  border-radius: 3px;
+  font-family: 'Special Elite', cursive;
+  font-size: 0.95rem;
+  color: var(--navy);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.back-btn:hover { border-color: var(--navy-lt); background: var(--paper); }
+.back-note {
+  font-family: Georgia, serif;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  flex: 1;
+  text-align: center;
+}
+
+/* ── COMPLETION SCREEN ── */
+.complete-card {
+  background: var(--paper);
+  border-radius: 3px; overflow: hidden;
+  box-shadow: 0 4px 24px var(--shadow);
+  border: 3px solid var(--gold); text-align: center;
+}
+.complete-card::before {
+  content: 'CASE CLOSED — OPERATION CLEAN SWEEP — MISSION ACCOMPLISHED';
+  display: block; background: var(--green); color: rgba(255,255,255,0.9);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem; letter-spacing: 3px; text-transform: uppercase;
+  padding: 5px 16px;
+}
+.complete-banner {
+  background: var(--navy); padding: 32px 24px;
+  border-bottom: 4px solid var(--gold);
+}
+.complete-banner h2 {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(1.4rem, 4vw, 2.2rem); color: var(--gold); margin-bottom: 8px;
+}
+.complete-banner p {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.9rem; color: rgba(255,255,255,0.7); letter-spacing: 1px;
+}
+.complete-body { padding: 32px 28px; }
+.case-closed-stamp {
+  display: inline-block;
+  font-family: 'Special Elite', cursive;
+  font-size: 2rem; color: var(--green);
+  border: 5px solid var(--green); border-radius: 50%;
+  width: 110px; height: 110px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px; flex-direction: column; line-height: 1.1;
+  transform: rotate(-8deg);
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+}
+.answer-reveal {
+  background: var(--navy); border-radius: 3px;
+  padding: 20px 24px; margin: 20px 0; text-align: left;
+}
+.answer-reveal h3 {
+  font-family: 'Special Elite', cursive;
+  color: var(--gold); font-size: 1.1rem; margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;
+}
+.answer-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px dashed rgba(255,255,255,0.1);
+  font-family: 'Courier Prime', monospace; font-size: 0.9rem;
+}
+.answer-row:last-child { border-bottom: none; }
+.answer-label { color: rgba(255,255,255,0.7); }
+.answer-val { color: var(--gold); font-weight: 700; font-size: 1rem; }
+.complete-note {
+  font-size: 0.92rem; line-height: 1.7; color: #555; margin-top: 16px;
+}
+.scorm-complete-msg {
+  background: var(--green-lt); border: 1px solid var(--green);
+  border-radius: 3px; padding: 12px 18px; margin: 16px 0;
+  font-family: 'Courier Prime', monospace; font-size: 0.88rem;
+  color: var(--green); font-weight: 700;
+}
+
+/* ── BACKGROUND IMAGE — detective office ── */
+body {
+  background-color: #1a1208;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Cdefs%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='600' height='400' filter='url(%23n)' opacity='0.08' fill='%23b8860b'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(
+      92deg,
+      transparent, transparent 80px,
+      rgba(255,255,255,0.008) 80px, rgba(255,255,255,0.008) 81px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 120px,
+      rgba(184,134,11,0.04) 120px, rgba(184,134,11,0.04) 121px
+    );
+  background-attachment: fixed;
+}
+
+/* Vignette overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 40%,
+    rgba(10,8,4,0.55) 100%
+  );
+}
+
+/* ── TOP SECRET WATERMARK — accessible (decorative only) ── */
+.case-card::after {
+  content: 'TOP SECRET';
+  position: absolute; bottom: 40px; right: -18px;
+  font-family: 'Special Elite', cursive;
+  font-size: 1.1rem; letter-spacing: 6px; text-transform: uppercase;
+  color: rgba(139,26,26,0.1);
+  transform: rotate(-35deg);
+  pointer-events: none; user-select: none;
+  white-space: nowrap; z-index: 0;
+}
+.case-card { position: relative; overflow: visible; }
+
+/* Repeat watermark mid-card */
+.card-body::before {
+  content: 'TOP SECRET';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-family: 'Special Elite', cursive;
+  font-size: 2.8rem; letter-spacing: 8px; text-transform: uppercase;
+  color: rgba(139,26,26,0.055);
+  pointer-events: none; user-select: none;
+  white-space: nowrap; z-index: 0;
+}
+.card-body { position: relative; overflow: hidden; }
+
+/* ── NAME ENTRY ── */
+.name-entry {
+  background: var(--gold-lt);
+  border: 2px solid var(--gold);
+  border-radius: 3px;
+  padding: 18px 20px;
+  margin: 20px 0;
+}
+.name-label {
+  display: block;
+  font-family: 'Special Elite', cursive;
+  font-size: 1rem; color: var(--navy);
+  font-weight: 700; margin-bottom: 4px;
+}
+.name-subtext {
+  font-size: 0.9rem; color: #4a3800; margin-bottom: 12px; line-height: 1.5;
+}
+.name-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--mid); border-radius: 3px;
+  font-family: Georgia, serif; font-size: 1.05rem;
+  background: white; color: var(--ink);
+  outline: none;
+}
+.name-input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,39,68,0.12); }
+.name-input.error { border-color: var(--red); }
+
+/* ── PRINT CERTIFICATE BUTTON ── */
+/* .print-cert-btn removed — certificate replaced by badge system */
+._unused {
+  display: block; margin: 20px auto 0;
+  padding: 12px 32px;
+  background: var(--navy); border: 2px solid var(--navy-lt); border-radius: 3px;
+  font-family: 'Special Elite', cursive; font-size: 1rem;
+  color: white; cursor: pointer; letter-spacing: 1px;
+  transition: background 0.15s;
+}
+/* .print-cert-btn:hover removed */
+
+/* ── CERTIFICATE (screen hidden, print shown) ── */
+/* ── BADGE SECTION ── */
+.badge-earned-section {
+  text-align: center;
+  margin: 24px 0 8px;
+}
+.badge-img {
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  margin: 0 auto 16px;
+  display: block;
+}
+.badge-download-btn {
+  display: inline-block;
+  background: var(--green);
+  color: white;
+  font-family: 'Special Elite', cursive;
+  font-size: 1rem; letter-spacing: 1px;
+  padding: 12px 28px;
+  border: 2px solid var(--green);
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+.badge-download-btn:hover { background: var(--green-lt); color: var(--green); }
+
+.showcase-instructions {
+  background: var(--gold-lt);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin: 16px 0 0;
+  text-align: left;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.showcase-instructions strong {
+  font-family: 'Special Elite', cursive;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 6px;
+  color: var(--navy);
+}
+
+.no-badge-section {
+  background: var(--red-lt);
+  border: 2px solid var(--red);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin: 20px 0 0;
+  text-align: center;
+}
+.no-badge-section h3 {
+  font-family: 'Special Elite', cursive;
+  color: var(--red);
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+.no-badge-section p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #5a2020;
+}
+
+.wp-score { margin: 0 0 16px; padding: 12px 16px; border: 2px solid var(--mid, #888); border-radius: 4px; font-family: 'Courier Prime', monospace; line-height: 1.6; }
+.wp-score ul { margin: 6px 0 0 20px; padding: 0; }
+
+/* adjusted trial balance helper */
+.adj-tb-intro { margin: 0 0 10px; font-size: 0.92rem; line-height: 1.6; }
+.adj-tb-wrap { margin: 0 0 22px; }
+.adj-tb-btn {
+  display: inline-block; padding: 10px 20px; cursor: pointer;
+  background: #fff; color: var(--navy); border: 2px solid var(--navy); border-radius: 3px;
+  font-family: 'Courier Prime', monospace; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.5px;
+}
+.adj-tb-btn:hover { background: var(--navy); color: #fff; }
+.adj-tb-btn:focus-visible { outline: 3px solid var(--focus, #f0c040); outline-offset: 2px; }
+.adj-tb-panel { margin-top: 12px; overflow-x: auto; }
+.adj-tb-panel table { width: 100%; border-collapse: collapse; }
+.adj-tb-panel caption { text-align: left; font-family: 'Courier Prime', monospace; font-weight: 700; padding: 0 0 6px; }
+.adj-tb-panel td.num, .adj-tb-panel th.num { text-align: right; font-family: 'Courier Prime', monospace; }
+.adj-tb-panel tfoot td { font-weight: 700; border-top: 2px solid var(--navy); }
+.adj-tb-note { margin: 10px 0 0; font-size: 0.88rem; line-height: 1.6; }
+
+/* workpaper feedback */
+.wp-fb { margin-top: 12px; padding-top: 10px; border-top: 1px dashed currentColor; }
+.wp-fb-list { margin: 6px 0 0 20px; padding: 0; }
+.wp-fb-list li { margin: 6px 0; line-height: 1.5; }
+.wp-fb-more { margin: 8px 0 0; font-size: 0.9em; }
+
+/* workpaper gate warning */
+.workpaper-warning {
+  display: none;
+  background: #fff3cd;
+  border: 1px solid #e6a817;
+  border-radius: 3px;
+  padding: 10px 14px;
+  margin: 10px 0 0;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.88rem;
+  color: #6b4c00;
+}
+
+
+
+/* ── FIX: slow completion — remove auto-advance, keep screen stable ── */
+
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+<div aria-live="polite" aria-atomic="true" class="sr-only" id="sr-announce"></div>
+<div aria-live="assertive" aria-atomic="true" class="sr-only" id="sr-alert"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-top">
+    <div>
+      <span class="case-file-label">Forensic Accounting · Case No. GC-2301</span>
+      <h1>Ghost Controller: <em>Operation Clean Sweep</em></h1>
+    </div>
+    <span class="classified-stamp">Classified</span>
+  </div>
+  <div class="progress-bar-wrap" id="progress-bar" aria-label="Case progress">
+    <div class="phase-pips" role="list" aria-label="Phases">
+      <div class="pip locked" id="pip-1" role="listitem" aria-label="Phase 1">1</div>
+      <div class="pip-connector" id="conn-1"></div>
+      <div class="pip locked" id="pip-2" role="listitem" aria-label="Phase 2">2</div>
+      <div class="pip-connector" id="conn-2"></div>
+      <div class="pip locked" id="pip-3" role="listitem" aria-label="Phase 3">3</div>
+      <div class="pip-connector" id="conn-3"></div>
+      <div class="pip locked" id="pip-4" role="listitem" aria-label="Phase 4">4</div>
+      <div class="pip-connector" id="conn-4"></div>
+      <div class="pip locked" id="pip-5" role="listitem" aria-label="Phase 5">5</div>
+    </div>
+    <span class="progress-label" id="progress-label" aria-live="polite">Briefing</span>
+  </div>
+</header>
+
+<main id="main-content">
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 0: BRIEFING
+══════════════════════════════════════════════ -->
+<div class="screen active" id="screen-briefing">
+  <div class="briefing-card">
+    <div class="briefing-header">
+      <div>
+        <h2>Case Briefing: Operation Clean Sweep</h2>
+        <p>Northstar Forensic Advisory · Fraud Investigation Unit</p>
+      </div>
+    </div>
+    <div class="briefing-body">
+      <p><strong>Listen up, Team.</strong> We've just been called in by the Board of Directors at <strong>Pinecrest Industrial Services</strong>. Their lead controller, <em>"Fast" Eddie Ledger</em>, vanished last night.</p>
+      <p>Before he left, Eddie sent a cryptic email claiming he had <em>"cleaned the books"</em> and that the company's equity was far lower than reported. He didn't delete the data — but he did something worse: he left the accounting cycle <strong>unfinished</strong>.</p>
+      <p>The Board needs to present their final, audited numbers to the bank in exactly <strong>60 minutes</strong>, or their credit line will be frozen.</p>
+
+      <div class="mission-box" role="region" aria-label="Mission">
+        <p><strong>Your Mission:</strong> Step into Eddie's office, reconstruct June's activity, and find the true <strong>Retained Earnings</strong> balance. If your final number matches the bank's records, we've caught Eddie in a lie. If not… <strong>the company is bankrupt.</strong></p>
+      </div>
+
+      <p><strong>How this works:</strong></p>
+      <ul class="instructions-list">
+        <li><span class="inst-num" aria-hidden="true">1</span><span class="inst-text">Work through <strong>5 phases</strong> in order. Each phase builds on the last — you cannot skip ahead.</span></li>
+        <li><span class="inst-num" aria-hidden="true">2</span><span class="inst-text">Use the <strong>scaffolding fields</strong> in each phase to work out your answers on screen.</span></li>
+        <li><span class="inst-num" aria-hidden="true">3</span><span class="inst-text">Enter the <strong>Vault Code</strong> at the bottom of each phase. Numbers only — no dollar signs or commas.</span></li>
+        <li><span class="inst-num" aria-hidden="true">4</span><span class="inst-text">If your code is wrong, you will receive a <strong>targeted hint</strong>. You have <strong>5 attempts</strong> per vault. After the third, the answer is revealed and you can move on.</span></li>
+        <li><span class="inst-num" aria-hidden="true">5</span><span class="inst-text">Complete all five phases to close the case. Earn the Cycle Master badge by showing your work and getting at least 85% of your workpaper entries correct.</span></li>
+      </ul>
+
+
+      <div class="name-entry" id="name-entry">
+        <label for="student-name" class="name-label">Investigator Name</label>
+        <p class="name-subtext">Enter your name before beginning. It will appear on your Cycle Master badge if earned. Your case file uses figures generated from your name, so your numbers will differ from your classmates'.</p>
+        <input type="text" id="student-name" class="name-input" placeholder="Your full name" autocomplete="name" aria-required="true" aria-describedby="name-hint">
+        <p id="name-hint" class="name-hint sr-only">Required. Your name will appear on your badge if earned.</p>
+        <p class="name-error sr-only" id="name-error" role="alert"></p>
+      </div>
+      <button class="start-btn" onclick="startCase()" aria-label="Begin the investigation">Enter Eddie's Office →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1: PHASE 1 — JOURNAL ENTRIES & T-ACCOUNTS
+══════════════════════════════════════════════ -->
+<div class="screen" id="screen-1">
+  <div class="case-card">
+    <div class="card-header">
+      <div>
+        <span class="phase-tag">Phase 1 of 5 · The General Ledger</span>
+        <h2>Reconstructing the Crime Scene</h2>
+      </div>
+      <div class="phase-num-badge" aria-hidden="true">1</div>
+    </div>
+    <div class="card-body">
+      <div class="inv-note">
+        <span class="inv-note-label">Investigator Note</span>
+        "We found four crumpled receipts and a bank deposit slip in Eddie's trash can. You must journalize these immediately to see where the cash went."
+      </div>
+
+      <div class="section-head">Starting Balances</div>
+      <div class="balances-row">
+        <div class="balance-chip">Cash: <strong data-v="cash0">$5,000</strong></div>
+        <div class="balance-chip">Common Stock: <strong data-v="cs">$5,000</strong></div>
+        <div class="balance-chip">Retained Earnings: <strong data-v="re0">$12,000</strong></div>
+      </div>
+
+      <div class="section-head">June Transactions</div>
+      <ul class="tx-list">
+        <li><span class="tx-date">June 5</span><span class="tx-text">Performed services for a client and received <strong data-v="rev">$9,000</strong> cash.</span></li>
+        <li><span class="tx-date">June 12</span><span class="tx-text">Purchased office supplies on account for <strong data-v="sup">$1,500</strong>.</span></li>
+        <li><span class="tx-date">June 25</span><span class="tx-text">Paid monthly staff salaries of <strong data-v="sal">$4,000</strong>.</span></li>
+        <li><span class="tx-date">June 28</span><span class="tx-text">Paid a cash dividend of <strong data-v="div">$1,000</strong>.</span></li>
+      </ul>
+
+      <div class="section-head">Journal Entries — Scaffolding</div>
+      <p style="font-size:0.85rem;color:#3a3020;margin-bottom:10px;font-family:'Courier Prime',monospace;">Record each transaction below. These fields are for your working — only the vault code is checked.</p>
+      <table class="je-table" aria-label="Journal entry scaffolding">
+        <thead><tr><th>Date</th><th>Account</th><th>Debit ($)</th><th>Credit ($)</th></tr></thead>
+        <tbody>
+          <tr><td>June 5</td><td><input type="text" placeholder="Account name" aria-label="June 5 account debit"></td><td><input type="text" placeholder="0.00" aria-label="June 5 debit amount"></td><td></td></tr>
+          <tr><td></td><td class="indent"><input type="text" placeholder="Account name" aria-label="June 5 account credit"></td><td></td><td><input type="text" placeholder="0.00" aria-label="June 5 credit amount"></td></tr>
+          <tr><td>June 12</td><td><input type="text" placeholder="Account name" aria-label="June 12 debit account"></td><td><input type="text" placeholder="0.00" aria-label="June 12 debit"></td><td></td></tr>
+          <tr><td></td><td class="indent"><input type="text" placeholder="Account name" aria-label="June 12 credit account"></td><td></td><td><input type="text" placeholder="0.00" aria-label="June 12 credit"></td></tr>
+          <tr><td>June 25</td><td><input type="text" placeholder="Account name" aria-label="June 25 debit account"></td><td><input type="text" placeholder="0.00" aria-label="June 25 debit"></td><td></td></tr>
+          <tr><td></td><td class="indent"><input type="text" placeholder="Account name" aria-label="June 25 credit account"></td><td></td><td><input type="text" placeholder="0.00" aria-label="June 25 credit"></td></tr>
+          <tr><td>June 28</td><td><input type="text" placeholder="Account name" aria-label="June 28 debit account"></td><td><input type="text" placeholder="0.00" aria-label="June 28 debit"></td><td></td></tr>
+          <tr><td></td><td class="indent"><input type="text" placeholder="Account name" aria-label="June 28 credit account"></td><td></td><td><input type="text" placeholder="0.00" aria-label="June 28 credit"></td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-head">T-Accounts — Post your entries</div>
+      <div class="t-grid">
+        <div class="t-account">
+          <div class="t-account-name">Cash</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="5,000" data-ph="cash0" aria-label="Cash debit 1"><input type="text" placeholder="" aria-label="Cash debit 2"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Cash credit 1"><input type="text" placeholder="" aria-label="Cash credit 2"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Cash balance" id="t-cash-bal"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Supplies</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="Supplies debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Supplies credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Supplies balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Accounts Payable</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="AP debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="AP credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="AP balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Common Stock</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="CS debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="5,000" data-ph="cs" aria-label="CS credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="CS balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Retained Earnings</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="RE debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="12,000" data-ph="re0" aria-label="RE credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="RE balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Dividends</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="Div debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Div credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Div balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Service Revenue</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="Rev debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Rev credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Rev balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Salaries Expense</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="Sal debit 1"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Sal credit 1"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Sal balance"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VAULT 1 -->
+      <div class="vault-section" id="vault-1">
+        <p class="vault-title">Vault 1 Code</p>
+        <p class="vault-question">What is the <strong style="color:var(--gold)">ending balance of the Cash account</strong>?<br></p>
+        <div class="workpaper-warning" id="wp-warn-1">⚠ Complete your workpapers above before submitting the vault code. The Cycle Master badge requires workpapers in each room and at least 85% of your workpaper entries correct.</div>
+        <label id="v1-input-lbl" for="v1-input" class="vault-visible-label">Vault 1 Code — Cash Ending Balance:</label>
+        <div class="vault-input-row">
+          <input type="text" class="vault-input" id="v1-input" aria-labelledby="v1-input-lbl" placeholder="Enter code" inputmode="numeric" aria-label="Vault 1 code — Cash ending balance">
+          <button class="vault-btn" onclick="checkVault(1)" aria-label="Submit vault 1 code">Submit Code</button>
+        </div>
+        <div class="vault-feedback" id="v1-feedback" role="alert"></div>
+        <p class="attempt-count" id="v1-attempts"></p>
+        <button class="next-btn" id="v1-next" onclick="goToPhase(2)" aria-label="Proceed to Phase 2">Vault Unlocked — Proceed to Phase 2 →</button>
+      <div class="phase-nav-row">
+        <button class="back-btn" onclick="showScreen('screen-briefing'); updateProgress(1);" aria-label="Return to Briefing">&larr; Return to Briefing</button>
+        <span class="back-note">Continue working Phase 1 — enter your vault code above when ready.</span>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2: PHASE 2 — TRIAL BALANCE
+══════════════════════════════════════════════ -->
+<div class="screen" id="screen-2">
+  <div class="case-card">
+    <div class="card-header">
+      <div>
+        <span class="phase-tag">Phase 2 of 5 · The Unadjusted Trial Balance</span>
+        <h2>The First Audit Check</h2>
+      </div>
+      <div class="phase-num-badge" aria-hidden="true">2</div>
+    </div>
+    <div class="card-body">
+      <div class="inv-note">
+        <span class="inv-note-label">Investigator Note</span>
+        "Fast Eddie was known for hiding 'plug figures' in the Trial Balance. If your Debits don't equal your Credits right now, he's already won. Prove the books are mathematically sound before moving deeper."
+      </div>
+
+      <div class="section-head">Unadjusted Trial Balance — Complete the Table</div>
+      <p style="font-size:0.85rem;color:#3a3020;margin-bottom:12px;font-family:'Courier Prime',monospace;">Transfer your T-account ending balances into the correct Debit or Credit column.</p>
+
+      <table class="tb-table" aria-label="Trial balance">
+        <thead>
+          <tr><th style="width:50%">Account Name</th><th style="width:25%">Debit ($)</th><th style="width:25%">Credit ($)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cash</td><td><input type="text" placeholder="?" aria-label="Cash debit"></td><td><input type="text" placeholder="?" aria-label="Cash credit"></td></tr>
+          <tr><td>Supplies</td><td><input type="text" placeholder="?" aria-label="Supplies debit"></td><td><input type="text" placeholder="?" aria-label="Supplies credit"></td></tr>
+          <tr><td>Accounts Payable</td><td><input type="text" placeholder="?" aria-label="AP debit"></td><td><input type="text" placeholder="?" aria-label="AP credit"></td></tr>
+          <tr><td>Common Stock</td><td><input type="text" placeholder="?" aria-label="Common Stock debit"></td><td><input type="text" placeholder="?" aria-label="Common Stock credit"></td></tr>
+          <tr><td>Retained Earnings (Beginning)</td><td><input type="text" placeholder="?" aria-label="RE debit"></td><td><input type="text" placeholder="?" aria-label="RE credit"></td></tr>
+          <tr><td>Dividends</td><td><input type="text" placeholder="?" aria-label="Dividends debit"></td><td><input type="text" placeholder="?" aria-label="Dividends credit"></td></tr>
+          <tr><td>Service Revenue</td><td><input type="text" placeholder="?" aria-label="Revenue debit"></td><td><input type="text" placeholder="?" aria-label="Revenue credit"></td></tr>
+          <tr><td>Salaries Expense</td><td><input type="text" placeholder="?" aria-label="Salaries debit"></td><td><input type="text" placeholder="?" aria-label="Salaries credit"></td></tr>
+          <tr class="total-row"><td><strong>TOTALS</strong></td><td><input type="text" placeholder="$?" aria-label="Total debits" id="tb-total-debit"></td><td><input type="text" placeholder="$?" aria-label="Total credits"></td></tr>
+          <tr><td colspan="3" style="padding:10px 8px 4px;font-family:'Courier Prime',monospace;font-size:0.82rem;color:#5a4a30;font-style:italic;">&#9888; Remember the storyline — we are cleaning up Fast Eddie's books. The trial balance may not balance. That imbalance is part of the evidence.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- VAULT 2 -->
+      <div class="vault-section" id="vault-2">
+        <p class="vault-title">Vault 2 Code</p>
+        <p class="vault-question">What is the <strong style="color:var(--gold)">Trial Balance Total</strong> — the sum of the debit column?<br></p>
+        <div class="workpaper-warning" id="wp-warn-2">⚠ Complete your workpapers above before submitting the vault code. The Cycle Master badge requires workpapers in each room and at least 85% of your workpaper entries correct.</div>
+        <label id="v2-input-lbl" for="v2-input" class="vault-visible-label">Vault 2 Code — Trial Balance Debit Total:</label>
+        <div class="vault-input-row">
+          <input type="text" class="vault-input" id="v2-input" aria-labelledby="v2-input-lbl" placeholder="Enter code" inputmode="numeric" aria-label="Vault 2 code — trial balance total">
+          <button class="vault-btn" onclick="checkVault(2)" aria-label="Submit vault 2 code">Submit Code</button>
+        </div>
+        <div class="vault-feedback" id="v2-feedback" role="alert"></div>
+        <p class="attempt-count" id="v2-attempts"></p>
+        <button class="next-btn" id="v2-next" onclick="goToPhase(3)" aria-label="Proceed to Phase 3">Vault Unlocked — Proceed to Phase 3 →</button>
+      <div class="phase-nav-row">
+        <button class="back-btn" onclick="reviewPhase(1);" aria-label="Return to Phase 1">&larr; Return to Phase 1</button>
+        <span class="back-note">Continue working Phase 2 — enter your vault code above when ready.</span>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3: PHASE 3 — ADJUSTING ENTRIES
+══════════════════════════════════════════════ -->
+<div class="screen" id="screen-3">
+  <div class="case-card">
+    <div class="card-header">
+      <div>
+        <span class="phase-tag">Phase 3 of 5 · Adjusting Entries</span>
+        <h2>The Hidden Adjustments</h2>
+      </div>
+      <div class="phase-num-badge" aria-hidden="true">3</div>
+    </div>
+    <div class="card-body">
+      <div class="inv-note">
+        <span class="inv-note-label">Investigator Note</span>
+        "We suspect Eddie was overstating assets to look better to the bank. We checked the supply closet — it's nearly empty. We also found an unpaid utility bill tucked under his keyboard. You must adjust for these 'unrecorded liabilities' to find the truth."
+      </div>
+
+      <div class="section-head">Adjustments Required</div>
+      <ul class="tx-list">
+        <li><span class="tx-date">Adj. A</span><span class="tx-text">A physical count of supplies shows only <strong data-v="supLeft">$400</strong> are left on hand. (Supplies on the books: <span data-v="sup">$1,500</span>.)</span></li>
+        <li><span class="tx-date">Adj. B</span><span class="tx-text">A <strong data-v="util">$500</strong> utility bill was received today but will not be paid until next month.</span></li>
+      </ul>
+
+      <div class="section-head">Record the Adjusting Journal Entries</div>
+      <table class="je-table" aria-label="Adjusting journal entries">
+        <thead><tr><th>Adj.</th><th>Account</th><th>Debit ($)</th><th>Credit ($)</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td><input type="text" placeholder="Account name" aria-label="Adj A debit account"></td><td><input type="text" placeholder="0.00" aria-label="Adj A debit"></td><td></td></tr>
+          <tr><td></td><td class="indent"><input type="text" placeholder="Account name" aria-label="Adj A credit account"></td><td></td><td><input type="text" placeholder="0.00" aria-label="Adj A credit"></td></tr>
+          <tr><td>B</td><td><input type="text" placeholder="Account name" aria-label="Adj B debit account"></td><td><input type="text" placeholder="0.00" aria-label="Adj B debit"></td><td></td></tr>
+          <tr><td></td><td class="indent"><input type="text" placeholder="Account name" aria-label="Adj B credit account"></td><td></td><td><input type="text" placeholder="0.00" aria-label="Adj B credit"></td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-head">Update your T-accounts for Supplies</div>
+      <div class="t-grid" style="max-width:500px">
+        <div class="t-account">
+          <div class="t-account-name">Supplies</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="1,500 (b/f)" data-ph="sup" data-ph-suffix=" (b/f)" aria-label="Supplies debit brought forward"><input type="text" placeholder="adj?" aria-label="Supplies adjustment debit"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="adj?" aria-label="Supplies adjustment credit"></div>
+            <div class="t-balance"><span class="t-balance-label">Adj. Balance:</span><input type="text" placeholder="?" aria-label="Supplies adjusted balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Supplies Expense</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="?" aria-label="Supplies expense debit"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Supplies expense credit"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Supplies expense balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Utilities Payable</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="" aria-label="Util payable debit"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="?" aria-label="Util payable credit"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Util payable balance"></div>
+          </div>
+        </div>
+        <div class="t-account">
+          <div class="t-account-name">Utilities Expense</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit</span><input type="text" placeholder="?" aria-label="Util expense debit"></div>
+            <div class="t-col"><span class="t-col-label">Credit</span><input type="text" placeholder="" aria-label="Util expense credit"></div>
+            <div class="t-balance"><span class="t-balance-label">Balance:</span><input type="text" placeholder="?" aria-label="Util expense balance"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VAULT 3 -->
+      <div class="vault-section" id="vault-3">
+        <p class="vault-title">Vault 3 Code</p>
+        <p class="vault-question">What is the <strong style="color:var(--gold)">adjusted balance of the Supplies asset account</strong>?<br></p>
+        <div class="workpaper-warning" id="wp-warn-3">⚠ Complete your workpapers above before submitting the vault code. The Cycle Master badge requires workpapers in each room and at least 85% of your workpaper entries correct.</div>
+        <label id="v3-input-lbl" for="v3-input" class="vault-visible-label">Vault 3 Code — Adjusted Supplies Balance:</label>
+        <div class="vault-input-row">
+          <input type="text" class="vault-input" id="v3-input" aria-labelledby="v3-input-lbl" placeholder="Enter code" inputmode="numeric" aria-label="Vault 3 code — adjusted supplies balance">
+          <button class="vault-btn" onclick="checkVault(3)" aria-label="Submit vault 3 code">Submit Code</button>
+        </div>
+        <div class="vault-feedback" id="v3-feedback" role="alert"></div>
+        <p class="attempt-count" id="v3-attempts"></p>
+        <button class="next-btn" id="v3-next" onclick="goToPhase(4)" aria-label="Proceed to Phase 4">Vault Unlocked — Proceed to Phase 4 →</button>
+      <div class="phase-nav-row">
+        <button class="back-btn" onclick="reviewPhase(2);" aria-label="Return to Phase 2">&larr; Return to Phase 2</button>
+        <span class="back-note">Continue working Phase 3 — enter your vault code above when ready.</span>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 4: PHASE 4 — FINANCIAL STATEMENTS
+══════════════════════════════════════════════ -->
+<div class="screen" id="screen-4">
+  <div class="case-card">
+    <div class="card-header">
+      <div>
+        <span class="phase-tag">Phase 4 of 5 · Financial Statement Logic</span>
+        <h2>The Financial Filter</h2>
+      </div>
+      <div class="phase-num-badge" aria-hidden="true">4</div>
+    </div>
+    <div class="card-body">
+      <div class="inv-note">
+        <span class="inv-note-label">Investigator Note</span>
+        "The bank only cares about the Balance Sheet and Income Statement. Filter out the noise and find the Total Equity. This is the number Eddie was trying to manipulate."
+      </div>
+
+      <p class="adj-tb-intro">Not sure where to start? Open the adjusted trial balance. It lists every account balance after the Phase 3 adjustments, which is the starting point for classifying the accounts and for the three calculations below. Total Equity is the equity part of the balance sheet: Common Stock plus Ending Retained Earnings.</p>
+      <div class="adj-tb-wrap">
+        <button type="button" class="adj-tb-btn" id="adj-tb-btn-4" aria-expanded="false" aria-controls="adj-tb-panel-4" onclick="toggleAdjTB(4)">Show Adjusted Trial Balance</button>
+        <div class="adj-tb-panel" id="adj-tb-panel-4" hidden></div>
+      </div>
+
+      <div class="section-head">Classify Each Account</div>
+      <p style="font-size:0.88rem;color:#3a3020;margin-bottom:12px;font-family:'Courier Prime',monospace;">Check <strong>one</strong> column for each account: IS = Income Statement &nbsp;|&nbsp; E = Statement of Equity &nbsp;|&nbsp; BS = Balance Sheet.</p>
+
+      <div style="overflow-x:auto">
+        <table class="tb-table" aria-label="Account classification" style="font-size:0.85rem">
+          <thead><tr><th style="width:46%">Account</th><th style="width:18%"><abbr title="Income Statement">IS</abbr></th><th style="width:18%"><abbr title="Statement of Equity">E</abbr></th><th style="width:18%"><abbr title="Balance Sheet">BS</abbr></th></tr></thead>
+          <tbody>
+            <tr><td>Cash</td><td style="text-align:center"><input type="checkbox" aria-label="Cash IS"></td><td style="text-align:center"><input type="checkbox" aria-label="Cash E"></td><td style="text-align:center"><input type="checkbox" aria-label="Cash BS"></td></tr>
+            <tr><td>Supplies</td><td style="text-align:center"><input type="checkbox" aria-label="Supplies IS"></td><td style="text-align:center"><input type="checkbox" aria-label="Supplies E"></td><td style="text-align:center"><input type="checkbox" aria-label="Supplies BS"></td></tr>
+            <tr><td>Accounts Payable</td><td style="text-align:center"><input type="checkbox" aria-label="AP IS"></td><td style="text-align:center"><input type="checkbox" aria-label="AP E"></td><td style="text-align:center"><input type="checkbox" aria-label="AP BS"></td></tr>
+            <tr><td>Common Stock</td><td style="text-align:center"><input type="checkbox" aria-label="CS IS"></td><td style="text-align:center"><input type="checkbox" aria-label="CS E"></td><td style="text-align:center"><input type="checkbox" aria-label="CS BS"></td></tr>
+            <tr><td>Retained Earnings</td><td style="text-align:center"><input type="checkbox" aria-label="RE IS"></td><td style="text-align:center"><input type="checkbox" aria-label="RE E"></td><td style="text-align:center"><input type="checkbox" aria-label="RE BS"></td></tr>
+            <tr><td>Dividends</td><td style="text-align:center"><input type="checkbox" aria-label="Div IS"></td><td style="text-align:center"><input type="checkbox" aria-label="Div E"></td><td style="text-align:center"><input type="checkbox" aria-label="Div BS"></td></tr>
+            <tr><td>Service Revenue</td><td style="text-align:center"><input type="checkbox" aria-label="Rev IS"></td><td style="text-align:center"><input type="checkbox" aria-label="Rev E"></td><td style="text-align:center"><input type="checkbox" aria-label="Rev BS"></td></tr>
+            <tr><td>Salaries Expense</td><td style="text-align:center"><input type="checkbox" aria-label="Sal IS"></td><td style="text-align:center"><input type="checkbox" aria-label="Sal E"></td><td style="text-align:center"><input type="checkbox" aria-label="Sal BS"></td></tr>
+            <tr><td>Supplies Expense</td><td style="text-align:center"><input type="checkbox" aria-label="SupEx IS"></td><td style="text-align:center"><input type="checkbox" aria-label="SupEx E"></td><td style="text-align:center"><input type="checkbox" aria-label="SupEx BS"></td></tr>
+            <tr><td>Utilities Payable</td><td style="text-align:center"><input type="checkbox" aria-label="UtilPay IS"></td><td style="text-align:center"><input type="checkbox" aria-label="UtilPay E"></td><td style="text-align:center"><input type="checkbox" aria-label="UtilPay BS"></td></tr>
+            <tr><td>Utilities Expense</td><td style="text-align:center"><input type="checkbox" aria-label="UtilEx IS"></td><td style="text-align:center"><input type="checkbox" aria-label="UtilEx E"></td><td style="text-align:center"><input type="checkbox" aria-label="UtilEx BS"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-head">Calculate the Health of the Business</div>
+      <div class="calc-row">
+        <span class="calc-label">Net Income:</span>
+        <input type="text" class="calc-input" placeholder="$?" aria-label="Net income calculation">
+      </div>
+      <div class="calc-row">
+        <span class="calc-label">Ending Retained Earnings:</span>
+        <input type="text" class="calc-input" placeholder="$?" aria-label="Ending retained earnings">
+      </div>
+      <div class="calc-row">
+        <span class="calc-label">Total Equity:</span>
+        <input type="text" class="calc-input" placeholder="$?" aria-label="Total equity" id="calc-equity">
+      </div>
+
+      <!-- VAULT 4 -->
+      <div class="vault-section" id="vault-4">
+        <p class="vault-title">Vault 4 Code</p>
+        <p class="vault-question">What is the <strong style="color:var(--gold)">Total Equity</strong> amount?<br></p>
+        <div class="workpaper-warning" id="wp-warn-4">⚠ Complete your workpapers above before submitting the vault code. The Cycle Master badge requires workpapers in each room and at least 85% of your workpaper entries correct.</div>
+        <label id="v4-input-lbl" for="v4-input" class="vault-visible-label">Vault 4 Code — Total Equity:</label>
+        <div class="vault-input-row">
+          <input type="text" class="vault-input" id="v4-input" aria-labelledby="v4-input-lbl" placeholder="Enter code" inputmode="numeric" aria-label="Vault 4 code — total equity">
+          <button class="vault-btn" onclick="checkVault(4)" aria-label="Submit vault 4 code">Submit Code</button>
+        </div>
+        <div class="vault-feedback" id="v4-feedback" role="alert"></div>
+        <p class="attempt-count" id="v4-attempts"></p>
+        <button class="next-btn" id="v4-next" onclick="goToPhase(5)" aria-label="Proceed to Phase 5">Vault Unlocked — Proceed to Phase 5 →</button>
+      <div class="phase-nav-row">
+        <button class="back-btn" onclick="reviewPhase(3);" aria-label="Return to Phase 3">&larr; Return to Phase 3</button>
+        <span class="back-note">Continue working Phase 4 — enter your vault code above when ready.</span>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 5: PHASE 5 — CLOSING ENTRIES
+══════════════════════════════════════════════ -->
+<div class="screen" id="screen-5">
+  <div class="case-card">
+    <div class="card-header">
+      <div>
+        <span class="phase-tag">Phase 5 of 5 · Closing Entries</span>
+        <h2>The Final Vault</h2>
+      </div>
+      <div class="phase-num-badge" aria-hidden="true">5</div>
+    </div>
+    <div class="card-body">
+      <div class="inv-note">
+        <span class="inv-note-label">Investigator Note</span>
+        "The temporary accounts are 'crime scenes' that need to be wiped clean. To find the Master Key, you must close everything directly to the Retained Earnings vault. The final balance is the only thing that can unlock the bank's trust."
+      </div>
+
+      <p class="adj-tb-intro">Need the account balances? Open the adjusted trial balance.</p>
+      <div class="adj-tb-wrap">
+        <button type="button" class="adj-tb-btn" id="adj-tb-btn-5" aria-expanded="false" aria-controls="adj-tb-panel-5" onclick="toggleAdjTB(5)">Show Adjusted Trial Balance</button>
+        <div class="adj-tb-panel" id="adj-tb-panel-5" hidden></div>
+      </div>
+
+      <div class="section-head">Perform the 3 Direct Closing Entries</div>
+      <p style="font-size:0.85rem;color:#3a3020;margin-bottom:14px;font-family:'Courier Prime',monospace;">Close directly to Retained Earnings — no Income Summary needed.</p>
+
+      <div class="closing-entry">
+        <span class="closing-entry-title">Entry 1 — Close Revenues to Retained Earnings</span>
+        <div class="closing-row">
+          <label>Debit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close revenues debit account">
+          <input type="text" placeholder="$?" aria-label="Close revenues debit amount">
+        </div>
+        <div class="closing-row">
+          <label>Credit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close revenues credit account">
+          <input type="text" placeholder="$?" aria-label="Close revenues credit amount">
+        </div>
+      </div>
+
+      <div class="closing-entry">
+        <span class="closing-entry-title">Entry 2 — Close All Expenses to Retained Earnings</span>
+        <div class="closing-row">
+          <label>Debit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close expenses debit account">
+          <input type="text" placeholder="$?" aria-label="Close expenses debit amount">
+        </div>
+        <div class="closing-row" style="padding-left:20px">
+          <label style="min-width:60px;color:#3a3020;font-size:0.875rem">Credit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close salaries">
+          <input type="text" placeholder="$?" aria-label="Salaries amount">
+        </div>
+        <div class="closing-row" style="padding-left:20px">
+          <label style="min-width:60px;color:#3a3020;font-size:0.875rem">Credit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close supplies expense">
+          <input type="text" placeholder="$?" aria-label="Supplies expense amount">
+        </div>
+        <div class="closing-row" style="padding-left:20px">
+          <label style="min-width:60px;color:#3a3020;font-size:0.875rem">Credit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close utilities expense">
+          <input type="text" placeholder="$?" aria-label="Utilities expense amount">
+        </div>
+      </div>
+
+      <div class="closing-entry">
+        <span class="closing-entry-title">Entry 3 — Close Dividends to Retained Earnings</span>
+        <div class="closing-row">
+          <label>Debit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close dividends debit account">
+          <input type="text" placeholder="$?" aria-label="Close dividends debit amount">
+        </div>
+        <div class="closing-row">
+          <label>Credit:</label>
+          <input type="text" placeholder="Account name" aria-label="Close dividends credit account">
+          <input type="text" placeholder="$?" aria-label="Close dividends credit amount">
+        </div>
+      </div>
+
+      <div class="section-head">Post-Closing Retained Earnings T-Account</div>
+      <div class="t-grid" style="max-width:280px">
+        <div class="t-account">
+          <div class="t-account-name">Retained Earnings</div>
+          <div class="t-account-body">
+            <div class="t-col"><span class="t-col-label">Debit (−)</span><input type="text" placeholder="close exp?" aria-label="RE close expenses"><input type="text" placeholder="close div?" aria-label="RE close dividends"></div>
+            <div class="t-col"><span class="t-col-label">Credit (+)</span><input type="text" placeholder="12,000 beg." data-ph="re0" data-ph-suffix=" beg." aria-label="RE beginning"><input type="text" placeholder="close rev?" aria-label="RE close revenue"></div>
+            <div class="t-balance"><span class="t-balance-label">Final Balance:</span><input type="text" placeholder="?" aria-label="Retained earnings final balance" id="re-final-bal"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VAULT 5 — MASTER CODE -->
+      <div class="vault-section" id="vault-5" style="border-color:#c8a84c; box-shadow: 0 0 20px rgba(200,168,76,0.2)">
+        <p class="vault-title" style="font-size:1.3rem">THE MASTER UNLOCK CODE</p>
+        <p class="vault-question">What is the <strong style="color:var(--gold)">Post-Closing Balance of Retained Earnings</strong>?<br>This is the number that will catch Eddie — or save the company.<br></p>
+        <div class="workpaper-warning" id="wp-warn-5">⚠ Complete your workpapers above before submitting the master code. The Cycle Master badge requires workpapers in each room and at least 85% of your workpaper entries correct.</div>
+        <label id="v5-input-lbl" for="v5-input" class="vault-visible-label">Master Unlock Code — Post-Closing Retained Earnings:</label>
+        <div class="vault-input-row">
+          <input type="text" class="vault-input" id="v5-input" aria-labelledby="v5-input-lbl" placeholder="Enter code" inputmode="numeric" aria-label="Master code — post-closing retained earnings" style="font-size:1.5rem;width:200px">
+          <button class="vault-btn" onclick="checkVault(5)" aria-label="Submit master code" style="font-size:1.1rem;padding:12px 28px">Submit Master Code</button>
+        </div>
+        <div class="vault-feedback" id="v5-feedback" role="alert"></div>
+        <p class="attempt-count" id="v5-attempts"></p>
+        <button class="next-btn" id="v5-next" onclick="completeCase()" aria-label="Close the case" style="background:var(--red);border-color:#c0392b;font-size:1.05rem;padding:14px 36px">Case Solved — Close the File →</button>
+      <div class="phase-nav-row">
+        <button class="back-btn" onclick="reviewPhase(4);" aria-label="Return to Phase 4">&larr; Return to Phase 4</button>
+        <span class="back-note">Enter your Master Code above when ready.</span>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 6: COMPLETION
+══════════════════════════════════════════════ -->
+<div class="screen" id="screen-complete">
+  <div class="complete-card">
+    <div class="complete-banner">
+      <h2>Operation Clean Sweep — Case Closed!</h2>
+      <p id="complete-name-display">Forensic Accounting Unit · Northstar Forensic Advisory · June Investigation</p>
+    </div>
+    <div class="complete-body">
+      <div class="case-closed-stamp" aria-label="Case closed stamp">
+        <span>CASE</span><span>CLOSED</span>
+      </div>
+      <p style="font-size:1.05rem;line-height:1.8;margin-bottom:16px;">
+        <strong>You caught Eddie.</strong> Your post-closing Retained Earnings matched the bank's records — the books are clean, the credit line is safe, and Fast Eddie Ledger is officially out of excuses.
+      </p>
+      <div class="wp-score" id="wp-score" role="status" tabindex="-1"></div>
+      <div class="scorm-complete-msg" id="scorm-msg">Assignment complete — your completion has been recorded.</div>
+      <div class="answer-reveal" aria-label="Answer key">
+        <h3>Answer Key — The Evidence</h3>
+        <div class="answer-row"><span class="answer-label">Vault 1 — Cash Ending Balance</span><span class="answer-val" data-v="a1">$9,000</span></div>
+        <div class="answer-row"><span class="answer-label">Vault 2 — Trial Balance Debit Total</span><span class="answer-val" data-v="a2">$15,500</span></div>
+        <div class="answer-row"><span class="answer-label">Vault 3 — Adjusted Supplies Balance</span><span class="answer-val" data-v="a3">$400</span></div>
+        <div class="answer-row"><span class="answer-label">Vault 4 — Total Equity</span><span class="answer-val" data-v="a4">$19,400</span></div>
+        <div class="answer-row"><span class="answer-label">Master Code — Post-Closing Retained Earnings</span><span class="answer-val" data-v="a5">$14,400</span></div>
+      </div>
+      <p class="complete-note">Apply these concepts to practice problems in your course materials before your exam. You now have the full accounting cycle mapped — from transactions all the way through closing.</p>
+
+      <!-- BADGE EARNED STATE -->
+      <div id="badge-earned-section" class="badge-earned-section" style="display:none;" aria-live="polite">
+        <p style="font-family:'Special Elite',cursive;font-size:1.15rem;color:var(--green);margin-bottom:12px;">🏅 You earned the Cycle Master badge!</p>
+        <img id="badge-display-img" src="" alt="Cycle Master badge" class="badge-img">
+        <br>
+        <a id="badge-download-link" href="" download="CycleMaster_Badge.png" class="badge-download-btn" aria-label="Download your Cycle Master badge">⬇ Download Your Badge</a>
+        <div class="showcase-instructions">
+          <strong>📌 Next Step — Submit Your Badge</strong>
+          1. Right-click the badge above and save the image, or click the Download button.<br>
+          2. Submit your badge as directed by your instructor.
+        </div>
+      </div>
+
+      <!-- NO BADGE STATE -->
+      <div id="badge-not-earned-section" class="no-badge-section" style="display:none;" aria-live="polite">
+        <h3>Cycle Master Badge Not Awarded</h3>
+        <p>
+          The Cycle Master badge requires two things: workpapers filled in for every room, and at least <strong>85%</strong> of your workpaper entries correct.<br><br>
+          You reached the end of the case, so your assignment is recorded as complete. <span id="badge-reason"></span><br><br>
+          <strong>To earn the badge:</strong> Use the numbered phase buttons in the progress bar above to return to any room, fix your workpapers using the feedback you saw, then go to Phase 5 and select <em>Case Solved — Close the File</em> again. Your badge unlocks automatically when you reach 85%.
+        </p>
+      </div>
+
+
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════
+//  BADGE (embedded base64)
+// ════════════════════════════════════════════════
+const BADGE_SRC = 'data:image/png;base64,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';
+
+// ════════════════════════════════════════════════
+//  SCORM 1.2
+// ════════════════════════════════════════════════
+const SCORM = (() => {
+  let api = null, initialized = false;
+  function findAPI(w) { try { let t=0; while(!w.API&&w.parent&&w.parent!==w&&t++<10)w=w.parent; return w.API||null; } catch(e){ return null; } }
+  function init() {
+    api = findAPI(window);
+    if (!api) { console.warn('SCORM API not found'); return false; }
+    const r = api.LMSInitialize('');
+    initialized = r==='true'||r===true;
+    if (initialized) {
+      const st = String(api.LMSGetValue('cmi.core.lesson_status') || '').toLowerCase();
+      if (st === '' || st === 'not attempted') { api.LMSSetValue('cmi.core.lesson_status','incomplete'); api.LMSCommit(''); }
+    }
+    return initialized;
+  }
+  function complete(score) {
+    if (!api||!initialized) return;
+    // Use 'completed' (not 'passed') to avoid Canvas auto-redirect on completion
+    api.LMSSetValue('cmi.core.lesson_status','completed');
+    api.LMSSetValue('cmi.core.score.raw', String(score));
+    api.LMSSetValue('cmi.core.score.min','0');
+    api.LMSSetValue('cmi.core.score.max','100');
+    api.LMSCommit('');
+    // LMSFinish intentionally deferred: called only on beforeunload
+    // so the page stays open for badge download
+  }
+  function terminate() {
+    if (!api||!initialized) return;
+    api.LMSFinish('');
+    initialized = false;
+  }
+  return { init, complete, terminate };
+})();
+const scormOK = SCORM.init();
+// Deferred LMSFinish pattern: terminate only when the student actually leaves
+window.addEventListener('beforeunload', () => SCORM.terminate());
+window.addEventListener('pagehide', () => SCORM.terminate());
+
+// ════════════════════════════════════════════════
+//  VAULT CONFIG
+// ════════════════════════════════════════════════
+const CLASS_SCENARIO = {cash0:5000, cs:5000, re0:12000, rev:9000, sup:1500, sal:4000, div:1000, supLeft:400, util:500};
+
+function hashStr(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+function derive(c){
+  const supExp = c.sup - c.supLeft;
+  const expTotal = c.sal + supExp + c.util;
+  const ni = c.rev - expTotal;
+  const cashEnd = c.cash0 + c.rev - c.sal - c.div;
+  const reEnd = c.re0 + ni - c.div;
+  return {supExp, expTotal, ni, cashEnd, reEnd, equity: c.cs + reEnd, tbDebit: cashEnd + c.sup + c.div + c.sal};
+}
+
+function buildScenario(name){
+  let seedParam = null;
+  try { seedParam = new URLSearchParams(window.location.search).get('seed'); } catch(e) {}
+  if (seedParam && seedParam.toLowerCase() === 'class') return Object.assign({}, CLASS_SCENARIO);
+  const key = (seedParam || name || '').toString().trim().toLowerCase().replace(/\s+/g,' ');
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const rnd = mulberry32(hashStr(key + '|' + attempt));
+    const pick = (min,max,step) => min + Math.floor(rnd() * (((max-min)/step)+1)) * step;
+    const c = {
+      cash0: pick(3000,8000,500), cs: pick(4000,8000,500), re0: pick(9000,16000,500),
+      rev: pick(7000,12000,500), sup: pick(1000,2200,100), sal: pick(2500,5000,250),
+      div: pick(500,1500,250), supLeft: pick(200,700,50), util: pick(300,900,50)
+    };
+    if (c.supLeft >= c.sup) continue;
+    const d = derive(c);
+    if (d.supExp < 300) continue;
+    if (d.ni < 1500 || d.ni > 5000) continue;
+    if (c.div >= d.ni) continue;
+    if (d.cashEnd < 3000) continue;
+    return c;
+  }
+  return Object.assign({}, CLASS_SCENARIO);
+}
+
+const fmt = n => '$' + Number(n).toLocaleString('en-US');
+
+function buildVaults(c){
+  const d = derive(c);
+  const V = {
+    1: { answer: d.cashEnd, hints: [
+      { after: 1, msg: `Check your Cash T-account again. Cash starts at ${fmt(c.cash0)} and increases when services are performed for cash. It decreases when salaries are paid and when dividends are paid. Did you include all four transactions that affect Cash?` },
+      { after: 3, msg: `Let's trace it: Cash starts at ${fmt(c.cash0)}. Add ${fmt(c.rev)} (June 5 services). Subtract ${fmt(c.sal)} (June 25 salaries) and ${fmt(c.div)} (June 28 dividends). The June 12 purchase was on account, so no cash is involved. What do you get?` } ] },
+    2: { answer: d.tbDebit, hints: [
+      { after: 1, msg: `The debit column should include: Cash, Supplies, Dividends, and Salaries Expense. The credit column should include: Accounts Payable, Common Stock, Retained Earnings, and Service Revenue. Check that your T-account balances transferred to the correct column. Assets and expenses are debits; liabilities, equity, and revenues are credits.` },
+      { after: 3, msg: `Here are the individual balances to check. Debit column: Cash ${fmt(d.cashEnd)}, Supplies ${fmt(c.sup)}, Dividends ${fmt(c.div)}, Salaries Expense ${fmt(c.sal)}. Add those four together for the debit total. Note: the credits column will be larger because of the Beginning Retained Earnings balance. Eddie intentionally left this unbalanced to obscure his fraud.` } ] },
+    3: { answer: c.supLeft, hints: [
+      { after: 1, msg: `Adjustment A involves Supplies. The physical count shows only ${fmt(c.supLeft)} on hand, but the T-account shows ${fmt(c.sup)}. The Supplies account needs to come down to match reality. Which entry accomplishes that, and what is the adjusted balance?` },
+      { after: 3, msg: `The adjusting entry for Supplies: Debit Supplies Expense ${fmt(d.supExp)}, Credit Supplies ${fmt(d.supExp)}. This reduces Supplies from ${fmt(c.sup)} down to ${fmt(c.supLeft)}. The vault code is the ending balance of the Supplies asset, not the expense.` } ] },
+    4: { answer: d.equity, hints: [
+      { after: 1, msg: `Work through this in steps. First calculate Net Income: Service Revenue ${fmt(c.rev)} minus all three expenses (Salaries ${fmt(c.sal)} + Supplies Expense ${fmt(d.supExp)} + Utilities Expense ${fmt(c.util)}). Then find Ending Retained Earnings: Beginning RE ${fmt(c.re0)} + Net Income minus Dividends ${fmt(c.div)}. The vault code is the final line, Total Equity, which adds Common Stock to that Ending RE figure.` },
+      { after: 3, msg: `Work through each line: Net Income = Revenue ${fmt(c.rev)} minus all three expenses (${fmt(c.sal)} + ${fmt(d.supExp)} + ${fmt(c.util)}) = ${fmt(d.ni)}. Ending Retained Earnings = Beginning RE ${fmt(c.re0)} + Net Income ${fmt(d.ni)} minus Dividends ${fmt(c.div)} = ${fmt(d.reEnd)}. Total Equity = Common Stock ${fmt(c.cs)} + Ending Retained Earnings ${fmt(d.reEnd)}. What is that final sum?` } ] },
+    5: { answer: d.reEnd, hints: [
+      { after: 1, msg: `The post-closing Retained Earnings balance reflects the three closing entries. Start with beginning RE ${fmt(c.re0)}. Add Revenue ${fmt(c.rev)} closed in. Subtract all Expenses closed out (${fmt(c.sal)} + ${fmt(d.supExp)} + ${fmt(c.util)} = ${fmt(d.expTotal)}). Subtract Dividends ${fmt(c.div)} closed out. What is the final balance?` },
+      { after: 3, msg: `Closing entry math: RE starts at ${fmt(c.re0)}. Credit ${fmt(c.rev)} to close Revenue. Debit ${fmt(d.expTotal)} to close all Expenses (${fmt(c.sal)} + ${fmt(d.supExp)} + ${fmt(c.util)}). Debit ${fmt(c.div)} to close Dividends. Final balance = ${fmt(c.re0)} + ${fmt(c.rev)} − ${fmt(d.expTotal)} − ${fmt(c.div)}.` } ] }
+  };
+  const D = (val, msg) => ({val, msg});
+  V[1].diag = [
+    D(c.cash0 + c.rev - c.sal, 'It looks like the dividend was left out. A cash dividend reduces Cash.'),
+    D(c.cash0 + c.rev - c.div, 'It looks like the salaries payment was left out. Salaries were paid in cash.'),
+    D(c.cash0 + c.rev, 'That is the starting cash plus the service revenue only. Two cash payments also reduce Cash.'),
+    D(c.cash0 + c.rev - c.sal - c.div - c.sup, 'The supplies were bought on account, so no cash left the business on June 12. Do not subtract them from Cash.'),
+    D(c.cash0 + c.rev - c.sal - c.div + c.sup, 'The supplies were bought on account, so they do not change Cash at all.')
+  ];
+  V[2].diag = [
+    D(c.cash0 + c.sup + c.div + c.sal, 'That uses the starting cash balance. Use the ending Cash balance from Phase 1.'),
+    D(d.cashEnd + c.div + c.sal, 'The Supplies balance is missing from your debit column. Supplies is an asset, so it is a debit.'),
+    D(d.cashEnd + c.sup + c.sal, 'The Dividends balance is missing from your debit column. Dividends are a debit.'),
+    D(d.cashEnd + c.sup + c.div, 'The Salaries Expense balance is missing from your debit column. Expenses are debits.'),
+    D(c.sup + c.cs + c.re0 + c.rev, 'That looks like the credit column total. The vault asks for the debit column.')
+  ];
+  V[3].diag = [
+    D(d.supExp, 'That is the amount of Supplies Expense. The vault asks for the ending balance of the Supplies asset account.'),
+    D(c.sup, 'That is the Supplies balance before the adjustment. Apply Adjustment A first.'),
+    D(c.util, 'That is the utility bill from Adjustment B. The vault asks for the adjusted Supplies balance from Adjustment A.')
+  ];
+  V[4].diag = [
+    D(d.reEnd, 'That is Ending Retained Earnings. Total Equity also includes Common Stock.'),
+    D(d.ni, 'That is Net Income. Total Equity is Common Stock plus Ending Retained Earnings.'),
+    D(c.cs + c.re0 + d.ni, 'The dividend was not subtracted. Dividends reduce Retained Earnings.'),
+    D(c.cs + c.re0 - c.div, 'Net Income is missing. Revenue minus all expenses (including the two adjustments) flows into Retained Earnings.'),
+    D(c.cs + c.re0 + c.rev - c.div, 'That adds Revenue instead of Net Income. Subtract all expenses, including the two adjustments, first.'),
+    D(c.cs + c.re0 + (c.rev - c.sal) - c.div, 'The two adjusting entries (supplies used and utilities) are not in your expenses yet.')
+  ];
+  V[5].diag = [
+    D(d.equity, 'That is Total Equity, which includes Common Stock. Retained Earnings does not include Common Stock.'),
+    D(d.ni, 'That is Net Income. Post-closing Retained Earnings starts from the beginning balance.'),
+    D(c.re0 + d.ni, 'The dividend closing entry is missing. Dividends are closed to Retained Earnings and reduce it.'),
+    D(c.re0 + c.rev - c.div, 'The expenses were not closed. All expense accounts, including the adjustments, are closed to Retained Earnings.'),
+    D(c.re0 + c.rev - (c.sal + c.util) - c.div, 'Supplies Expense from the adjusting entry is missing from the expenses you closed.'),
+    D(c.re0, 'That is the beginning balance. The three closing entries change it.')
+  ];
+  // drop any diagnostic that equals the correct answer
+  for (const k of [1,2,3,4,5]) V[k].diag = V[k].diag.filter(x => Math.abs(x.val - V[k].answer) >= 0.5);
+  return V;
+}
+
+let S = null;
+let VAULTS = {};
+
+function applyScenario(c){
+  const d = derive(c);
+  const vals = Object.assign({}, c, {a1:d.cashEnd, a2:d.tbDebit, a3:c.supLeft, a4:d.equity, a5:d.reEnd});
+  document.querySelectorAll('[data-v]').forEach(el => { el.textContent = fmt(vals[el.getAttribute('data-v')]); });
+  document.querySelectorAll('[data-ph]').forEach(el => {
+    el.setAttribute('placeholder', Number(vals[el.getAttribute('data-ph')]).toLocaleString('en-US') + (el.getAttribute('data-ph-suffix') || ''));
+  });
+  VAULTS = buildVaults(c);
+}
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+const MAX_ATTEMPTS = 5;
+const attempts = {1:0, 2:0, 3:0, 4:0, 5:0};
+let currentPhase = 0;
+// Track which phases have workpapers filled AND vault solved
+const workpapersFilled = {1:false, 2:false, 3:false, 4:false, 5:false};
+const wpWarned = {1:false, 2:false, 3:false, 4:false, 5:false};
+const vaultsSolved = {1:false, 2:false, 3:false, 4:false, 5:false};
+
+// ════════════════════════════════════════════════
+//  WORKPAPER GATE
+// ════════════════════════════════════════════════
+// Returns true if at least one non-vault workpaper input in the given screen has content
+function phaseHasWorkpapers(n) {
+  const screen = document.getElementById(`screen-${n}`);
+  if (!screen) return false;
+  const inputs = screen.querySelectorAll('input[type="text"]:not(.vault-input)');
+  for (const inp of inputs) {
+    if (inp.value.trim().length > 0) return true;
+  }
+  return false;
+}
+
+// ════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════
+function ann(msg, urgent=false) {
+  const el = document.getElementById(urgent?'sr-alert':'sr-announce');
+  el.textContent=''; requestAnimationFrame(()=>{el.textContent=msg;});
+}
+
+function parseAmount(str) {
+  return parseFloat(str.replace(/[$,\s]/g,''));
+}
+
+function scrollToTop() {
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  scrollToTop();
+}
+
+let studentName = '';
+
+function startCase() {
+  const nameInput = document.getElementById('student-name');
+  const val = nameInput ? nameInput.value.trim() : '';
+  if (!val) {
+    nameInput.classList.add('error');
+    nameInput.focus();
+    const err = document.getElementById('name-error');
+    if (err) { err.textContent = 'Please enter your name before beginning.'; err.classList.remove('sr-only'); }
+    ann('Please enter your name before beginning.', true);
+    return;
+  }
+  studentName = val;
+  if (!S) { S = buildScenario(val); applyScenario(S); }
+  nameInput.classList.remove('error');
+  showScreen('screen-1');
+  updateProgress(1);
+  ann('Phase 1 of 5 — The General Ledger. Reconstruct the crime scene.');
+}
+
+function completeCase() {
+  showScreen('screen-complete');
+  updateProgress(6);
+  document.getElementById('progress-label').textContent = 'Case Closed';
+  for(let i=1;i<=5;i++){
+    const pip = document.getElementById(`pip-${i}`);
+    if(pip) { pip.className='pip complete'; }
+    if(i<5){ const c=document.getElementById(`conn-${i}`); if(c) c.className='pip-connector lit'; }
+  }
+  if (studentName) {
+    const disp = document.getElementById('complete-name-display');
+    if (disp) disp.textContent = `Investigator ${studentName} · Northstar Forensic Advisory · June Investigation`;
+  }
+
+  // Badge: all 5 vaults solved + workpapers in all 5 phases + at least 85% of workpaper entries correct
+  const allVaultsSolved = [1,2,3,4,5].every(n => vaultsSolved[n]);
+  // Re-check workpapers at completion time for any phase they may have gone back to fill
+  for (let n=1; n<=5; n++) {
+    if (phaseHasWorkpapers(n)) workpapersFilled[n] = true;
+  }
+  const allWorkpapersFilled = [1,2,3,4,5].every(n => workpapersFilled[n]);
+  const score = S ? workpaperScore() : {correct:0, total:0, pct:0, passes:false, phases:[]};
+  const badgeEarned = allVaultsSolved && allWorkpapersFilled && score.passes;
+  const scoreEl = document.getElementById('wp-score');
+  if (scoreEl && S) {
+    const rows = score.phases.map(ph => `<li>Phase ${ph.n}: ${ph.correct} of ${ph.total} correct</li>`).join('');
+    scoreEl.innerHTML = `<strong>Workpaper accuracy: ${fmtPct(score.pct)}%</strong> (${score.correct} of ${score.total} entries correct; ${BADGE_THRESHOLD}% needed for the badge)<ul>${rows}</ul>`;
+  }
+  const reasonEl = document.getElementById('badge-reason');
+  if (reasonEl) {
+    const parts = [];
+    if (!allVaultsSolved) parts.push('One or more vault codes were not entered correctly.');
+    if (!allWorkpapersFilled) parts.push('One or more rooms had no workpaper entries.');
+    if (!score.passes) parts.push(`Your workpaper accuracy was ${fmtPct(score.pct)}%, and the badge needs ${BADGE_THRESHOLD}%.`);
+    reasonEl.textContent = parts.join(' ');
+  }
+
+  if(scormOK){
+    // Score: 100 for completion (Canvas records complete/incomplete)
+    SCORM.complete(100);
+    document.getElementById('scorm-msg').textContent = 'Assignment complete — your completion has been recorded.';
+  } else {
+    document.getElementById('scorm-msg').textContent = 'All five phases complete — investigation closed.';
+  }
+
+  if (badgeEarned) {
+    const badgeSection = document.getElementById('badge-earned-section');
+    const badgeImg = document.getElementById('badge-display-img');
+    const downloadLink = document.getElementById('badge-download-link');
+    badgeImg.src = BADGE_SRC;
+    downloadLink.href = BADGE_SRC;
+    badgeSection.style.display = 'block';
+    ann('Congratulations! You earned the Cycle Master badge. Download it and submit it as directed by your instructor.');
+  } else {
+    document.getElementById('badge-not-earned-section').style.display = 'block';
+    ann('Case closed. Badge not awarded. See the workpaper accuracy and instructions on screen to unlock the badge.');
+  }
+
+  requestAnimationFrame(()=>{
+    const title = document.querySelector('#screen-complete h2');
+    if(title){ title.setAttribute('tabindex','-1'); title.focus(); }
+  });
+}
+
+function goToPhase(n) {
+  showScreen(`screen-${n}`);
+  updateProgress(n);
+  ann(`Phase ${n} of 5 unlocked. ${getPhaseTitle(n)}`);
+  requestAnimationFrame(()=>{
+    const first = document.querySelector(`#screen-${n} input`);
+    if(first) first.focus();
+  });
+}
+
+function getPhaseTitle(n) {
+  const titles = {1:'The General Ledger',2:'The Unadjusted Trial Balance',3:'The Hidden Adjustments',4:'The Financial Filter',5:'The Final Vault'};
+  return titles[n]||'';
+}
+
+const PHASE_TITLES = {
+  1: 'The General Ledger',
+  2: 'The Trial Balance',
+  3: 'Adjusting Entries',
+  4: 'Financial Statements',
+  5: 'Closing Entries'
+};
+
+function updateProgress(phase) {
+  currentPhase = phase;
+  for(let i=1;i<=5;i++){
+    const pip = document.getElementById(`pip-${i}`);
+    if(i < phase) {
+      pip.className='pip complete';
+      pip.setAttribute('aria-label',`Phase ${i} — ${PHASE_TITLES[i]} — completed. Click to review.`);
+      pip.setAttribute('role','button');
+      pip.setAttribute('tabindex','0');
+      pip.onclick = () => reviewPhase(i);
+      pip.onkeydown = (e) => { if(e.key==='Enter'||e.key===' '){e.preventDefault();reviewPhase(i);} };
+    } else if(i===phase) {
+      pip.className='pip active';
+      pip.setAttribute('aria-label',`Phase ${i} — ${PHASE_TITLES[i]} — current`);
+      pip.removeAttribute('role');
+      pip.removeAttribute('tabindex');
+      pip.onclick = null;
+    } else {
+      pip.className='pip locked';
+      pip.setAttribute('aria-label',`Phase ${i} — locked`);
+      pip.removeAttribute('role');
+      pip.removeAttribute('tabindex');
+      pip.onclick = null;
+    }
+    if(i<5){
+      const conn = document.getElementById(`conn-${i}`);
+      conn.className = i < phase ? 'pip-connector lit' : 'pip-connector';
+    }
+  }
+  document.getElementById('progress-label').textContent =
+    phase<=5 ? `Phase ${phase} of 5 — ${getPhaseTitle(phase)}` : 'Complete';
+}
+
+function reviewPhase(n) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(`screen-${n}`).classList.add('active');
+  scrollToTop();
+  ann(`Reviewing Phase ${n} — ${PHASE_TITLES[n]}. Your work is preserved. Use the Return button to go back to Phase ${currentPhase}.`);
+}
+
+
+// ════════════════════════════════════════════════
+//  ADJUSTED TRIAL BALANCE HELPER (Phases 4 and 5)
+// ════════════════════════════════════════════════
+function adjTBHtml() {
+  const c = S, d = derive(S);
+  const rows = [
+    ['Cash', d.cashEnd, null],
+    ['Supplies', c.supLeft, null],
+    ['Dividends', c.div, null],
+    ['Salaries Expense', c.sal, null],
+    ['Supplies Expense', d.supExp, null],
+    ['Utilities Expense', c.util, null],
+    ['Accounts Payable', null, c.sup],
+    ['Utilities Payable', null, c.util],
+    ['Common Stock', null, c.cs],
+    ['Retained Earnings (beginning)', null, c.re0],
+    ['Service Revenue', null, c.rev]
+  ];
+  const td = rows.reduce((t, r) => t + (r[1] || 0), 0);
+  const tc = rows.reduce((t, r) => t + (r[2] || 0), 0);
+  const body = rows.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1] === null ? '' : fmt(r[1])}</td><td class="num">${r[2] === null ? '' : fmt(r[2])}</td></tr>`).join('');
+  const note = td === tc
+    ? ''
+    : `<p class="adj-tb-note">The debit and credit totals do not match. Eddie's opening balances were already out of balance by ${fmt(Math.abs(tc - td))}, which is part of what you are investigating. Use these account balances for the rest of the case.</p>`;
+  return `<table class="tb-table"><caption>Adjusted Trial Balance (after Phase 3 adjustments)</caption>
+    <thead><tr><th scope="col">Account</th><th scope="col" class="num">Debit</th><th scope="col" class="num">Credit</th></tr></thead>
+    <tbody>${body}</tbody>
+    <tfoot><tr><td>Totals</td><td class="num">${fmt(td)}</td><td class="num">${fmt(tc)}</td></tr></tfoot></table>${note}`;
+}
+
+function toggleAdjTB(n) {
+  const btn = document.getElementById(`adj-tb-btn-${n}`);
+  const panel = document.getElementById(`adj-tb-panel-${n}`);
+  if (!btn || !panel || !S) return;
+  const opening = panel.hasAttribute('hidden');
+  if (opening) {
+    panel.innerHTML = adjTBHtml();
+    panel.removeAttribute('hidden');
+    btn.textContent = 'Hide Adjusted Trial Balance';
+    ann('Adjusted trial balance shown below the button.');
+  } else {
+    panel.setAttribute('hidden', '');
+    btn.textContent = 'Show Adjusted Trial Balance';
+    ann('Adjusted trial balance hidden.');
+  }
+  btn.setAttribute('aria-expanded', String(opening));
+}
+
+// ════════════════════════════════════════════════
+//  WORKPAPER FEEDBACK
+// ════════════════════════════════════════════════
+function wpEl(n, label) { return document.querySelector(`#screen-${n} [aria-label="${label}"]`); }
+function wpNum(n, label) {
+  const el = wpEl(n, label);
+  if (!el) return {missing:true};
+  const raw = (el.value || '').trim();
+  if (!raw) return {blank:true};
+  const v = parseAmount(raw);
+  return isNaN(v) ? {bad:true} : {val:v};
+}
+
+const CB_COLS = ['IS','E','BS'];
+// A classification row is correct when exactly one column is checked and it is an accepted column
+function cbCorrect(n, sp) {
+  const accepted = Array.isArray(sp.side) ? sp.side : [sp.side];
+  const checked = CB_COLS.filter(col => { const e = wpEl(n, `${sp.label} ${col}`); return e && e.checked; });
+  return checked.length === 1 && accepted.includes(checked[0]);
+}
+
+function wpSpecs(n, c, d) {
+  const A = (label, exp, name, why, show) => ({t:'amt', label, exp, name, why, show});
+  const Z = (label, name, why) => ({t:'amt', label, exp:0, name, why, zero:true});
+  const T = (label, re, name, expName, why) => ({t:'acct', label, re, name, expName, why});
+  const RE = /retained|\bre\b/i;
+  if (n === 1) return [
+    T('June 5 account debit', /cash/i, 'June 5 debit account', 'Cash', 'Cash was received, so Cash is debited.'),
+    A('June 5 debit amount', c.rev, 'June 5 debit amount', 'Use the cash received in the transaction.', true),
+    T('June 5 account credit', /rev|service/i, 'June 5 credit account', 'Service Revenue', 'Services were performed, so revenue is credited.'),
+    A('June 5 credit amount', c.rev, 'June 5 credit amount', 'Debits and credits must be equal.', true),
+    T('June 12 debit account', /suppl/i, 'June 12 debit account', 'Supplies', 'Supplies are an asset you received, so Supplies is debited.'),
+    A('June 12 debit', c.sup, 'June 12 debit amount', 'Use the cost of the supplies in the transaction.', true),
+    T('June 12 credit account', /payable|a\/p|\bap\b/i, 'June 12 credit account', 'Accounts Payable', 'The supplies were bought on account, so you owe the vendor. That is Accounts Payable, not Cash.'),
+    A('June 12 credit', c.sup, 'June 12 credit amount', 'Debits and credits must be equal.', true),
+    T('June 25 debit account', /salar|wage/i, 'June 25 debit account', 'Salaries Expense', 'Paying staff is an expense, so Salaries Expense is debited.'),
+    A('June 25 debit', c.sal, 'June 25 debit amount', 'Use the salaries paid in the transaction.', true),
+    T('June 25 credit account', /cash/i, 'June 25 credit account', 'Cash', 'Salaries were paid in cash, so Cash is credited.'),
+    A('June 25 credit', c.sal, 'June 25 credit amount', 'Debits and credits must be equal.', true),
+    T('June 28 debit account', /dividend/i, 'June 28 debit account', 'Dividends', 'Dividends declared and paid are debited to Dividends, not to an expense.'),
+    A('June 28 debit', c.div, 'June 28 debit amount', 'Use the dividend in the transaction.', true),
+    T('June 28 credit account', /cash/i, 'June 28 credit account', 'Cash', 'The dividend was paid in cash, so Cash is credited.'),
+    A('June 28 credit', c.div, 'June 28 credit amount', 'Debits and credits must be equal.', true),
+    A('Cash balance', d.cashEnd, 'Cash T-account balance', 'Cash is an asset: starting cash, plus cash received, minus cash paid out (salaries and the dividend). The supplies were on account, so they do not touch Cash.'),
+    A('Supplies balance', c.sup, 'Supplies T-account balance', 'Supplies is an asset with one debit so far.'),
+    A('AP balance', c.sup, 'Accounts Payable T-account balance', 'Accounts Payable is a liability and has one credit, the supplies bought on account.'),
+    A('CS balance', c.cs, 'Common Stock T-account balance', 'Common Stock has only its starting credit balance.'),
+    A('RE balance', c.re0, 'Retained Earnings T-account balance', 'Retained Earnings has only its starting credit balance until the books are closed.'),
+    A('Div balance', c.div, 'Dividends T-account balance', 'Dividends has one debit, the dividend paid.'),
+    A('Rev balance', c.rev, 'Service Revenue T-account balance', 'Service Revenue has one credit, the services performed.'),
+    A('Sal balance', c.sal, 'Salaries Expense T-account balance', 'Salaries Expense has one debit, the salaries paid.')
+  ];
+  if (n === 2) {
+    const dr = (label, exp, name, why) => A(label, exp, name, why);
+    return [
+      dr('Cash debit', d.cashEnd, 'Cash (debit column)', 'Use the ending Cash balance from Phase 1. Assets have debit balances.'),
+      dr('Supplies debit', c.sup, 'Supplies (debit column)', 'Supplies is an asset, so its balance is a debit.'),
+      dr('Dividends debit', c.div, 'Dividends (debit column)', 'Dividends have a debit balance.'),
+      dr('Salaries debit', c.sal, 'Salaries Expense (debit column)', 'Expenses have debit balances.'),
+      A('AP credit', c.sup, 'Accounts Payable (credit column)', 'Liabilities have credit balances.'),
+      A('Common Stock credit', c.cs, 'Common Stock (credit column)', 'Equity accounts have credit balances.'),
+      A('RE credit', c.re0, 'Retained Earnings (credit column)', 'Use the beginning Retained Earnings. Closing has not happened yet.'),
+      A('Revenue credit', c.rev, 'Service Revenue (credit column)', 'Revenues have credit balances.'),
+      Z('Cash credit', 'Cash (credit column)', 'Cash has a debit balance, so nothing belongs in the credit column.'),
+      Z('Supplies credit', 'Supplies (credit column)', 'Supplies has a debit balance, so nothing belongs in the credit column.'),
+      Z('Dividends credit', 'Dividends (credit column)', 'Dividends has a debit balance, so nothing belongs in the credit column.'),
+      Z('Salaries credit', 'Salaries Expense (credit column)', 'Salaries Expense has a debit balance, so nothing belongs in the credit column.'),
+      Z('AP debit', 'Accounts Payable (debit column)', 'Accounts Payable has a credit balance, so nothing belongs in the debit column.'),
+      Z('Common Stock debit', 'Common Stock (debit column)', 'Common Stock has a credit balance, so nothing belongs in the debit column.'),
+      Z('RE debit', 'Retained Earnings (debit column)', 'Retained Earnings has a credit balance, so nothing belongs in the debit column.'),
+      Z('Revenue debit', 'Service Revenue (debit column)', 'Service Revenue has a credit balance, so nothing belongs in the debit column.'),
+      A('Total debits', d.tbDebit, 'Total debits', 'Add up only the debit column: Cash, Supplies, Dividends and Salaries Expense.'),
+      A('Total credits', c.sup + c.cs + c.re0 + c.rev, 'Total credits', 'Add up the credit column: Accounts Payable, Common Stock, Retained Earnings and Service Revenue. Note that this trial balance is not expected to balance.')
+    ];
+  }
+  if (n === 3) return [
+    T('Adj A debit account', /suppl.*exp|exp.*suppl/i, 'Adjustment A debit account', 'Supplies Expense', 'Supplies used up become an expense, so Supplies Expense is debited.'),
+    A('Adj A debit', d.supExp, 'Adjustment A debit amount', 'The amount used is the book balance minus the physical count.'),
+    T('Adj A credit account', /suppl/i, 'Adjustment A credit account', 'Supplies', 'The Supplies asset goes down, so Supplies is credited.'),
+    A('Adj A credit', d.supExp, 'Adjustment A credit amount', 'Debits and credits must be equal.'),
+    T('Adj B debit account', /util.*exp|exp.*util/i, 'Adjustment B debit account', 'Utilities Expense', 'The bill is an expense of this period, so Utilities Expense is debited.'),
+    A('Adj B debit', c.util, 'Adjustment B debit amount', 'Use the amount of the bill.', true),
+    T('Adj B credit account', /pay|a\/p|\bap\b/i, 'Adjustment B credit account', 'Utilities Payable', 'The bill has not been paid, so the credit goes to a payable, not Cash.'),
+    A('Adj B credit', c.util, 'Adjustment B credit amount', 'Debits and credits must be equal.', true),
+    A('Supplies adjustment credit', d.supExp, 'Supplies T-account adjustment', 'Supplies goes down by the amount used up, so the adjustment is a credit.'),
+    Z('Supplies adjustment debit', 'Supplies T-account adjustment debit', 'The adjustment reduces Supplies, so it belongs on the credit side.'),
+    A('Supplies adjusted balance', c.supLeft, 'Supplies adjusted balance', 'Beginning Supplies minus the adjustment should equal what the physical count shows.', true),
+    A('Supplies expense debit', d.supExp, 'Supplies Expense T-account debit', 'This matches the debit in Adjustment A.'),
+    A('Supplies expense balance', d.supExp, 'Supplies Expense balance', 'It starts at zero, so the balance is the one debit.'),
+    A('Util payable credit', c.util, 'Utilities Payable T-account credit', 'This matches the credit in Adjustment B.', true),
+    A('Util payable balance', c.util, 'Utilities Payable balance', 'It starts at zero, so the balance is the one credit.', true),
+    A('Util expense debit', c.util, 'Utilities Expense T-account debit', 'This matches the debit in Adjustment B.', true),
+    A('Util expense balance', c.util, 'Utilities Expense balance', 'It starts at zero, so the balance is the one debit.', true)
+  ];
+  if (n === 4) return [
+    {t:'cb', label:'Cash', side:'BS', key:'Cash', why:'Cash is an asset, so it goes on the Balance Sheet.'},
+    {t:'cb', label:'Supplies', side:'BS', key:'Supplies', why:'Supplies is an asset, so it goes on the Balance Sheet.'},
+    {t:'cb', label:'AP', side:'BS', key:'AP', name:'Accounts Payable', why:'Accounts Payable is a liability, so it goes on the Balance Sheet.'},
+    {t:'cb', label:'CS', side:['BS','E'], key:'CS', name:'Common Stock', why:'Common Stock is an equity account. Its ending balance is reported on the Balance Sheet (it also appears on the Statement of Equity, so either of those two columns is accepted, but check only one).'},
+    {t:'cb', label:'RE', side:['BS','E'], key:'RE', name:'Retained Earnings', why:'Retained Earnings is an equity account. Its ending balance is reported on the Balance Sheet (the Statement of Equity shows how it changed, so either of those two columns is accepted, but check only one).'},
+    {t:'cb', label:'Div', side:'E', key:'Div', name:'Dividends', why:'Dividends are not an expense. They reduce Retained Earnings, so they are reported on the Statement of Equity.'},
+    {t:'cb', label:'Rev', side:'IS', key:'Rev', name:'Service Revenue', why:'Revenue is reported on the Income Statement.'},
+    {t:'cb', label:'Sal', side:'IS', key:'Sal', name:'Salaries Expense', why:'Expenses are reported on the Income Statement.'},
+    {t:'cb', label:'SupEx', side:'IS', key:'SupEx', name:'Supplies Expense', why:'Expenses are reported on the Income Statement.'},
+    {t:'cb', label:'UtilEx', side:'IS', key:'UtilEx', name:'Utilities Expense', why:'Expenses are reported on the Income Statement.'},
+    {t:'cb', label:'UtilPay', side:'BS', key:'UtilPay', name:'Utilities Payable', why:'Utilities Payable is a liability, so it goes on the Balance Sheet.'},
+    A('Net income calculation', d.ni, 'Net Income', 'Net Income = Service Revenue minus all expenses (Salaries, Supplies Expense and Utilities Expense). Dividends are not an expense.'),
+    A('Ending retained earnings', d.reEnd, 'Ending Retained Earnings', 'Beginning Retained Earnings + Net Income − Dividends.'),
+    A('Total equity', d.equity, 'Total Equity', 'Common Stock + Ending Retained Earnings.')
+  ];
+  if (n === 5) return [
+    T('Close revenues debit account', /rev|service/i, 'Entry 1 debit account', 'Service Revenue', 'Revenue has a credit balance, so closing it means debiting Service Revenue.'),
+    A('Close revenues debit amount', c.rev, 'Entry 1 debit amount', 'Close the full revenue balance.'),
+    T('Close revenues credit account', RE, 'Entry 1 credit account', 'Retained Earnings', 'The instructions close directly to Retained Earnings, with no Income Summary.'),
+    A('Close revenues credit amount', c.rev, 'Entry 1 credit amount', 'Debits and credits must be equal.'),
+    T('Close expenses debit account', RE, 'Entry 2 debit account', 'Retained Earnings', 'Expenses reduce Retained Earnings, so Retained Earnings is debited.'),
+    A('Close expenses debit amount', d.expTotal, 'Entry 2 debit amount', 'This is the total of all three expenses, including the two adjustments.'),
+    T('Close salaries', /salar|wage/i, 'Entry 2 first credit account', 'Salaries Expense', 'Each expense account is credited to bring it to zero.'),
+    A('Salaries amount', c.sal, 'Entry 2 Salaries Expense amount', 'Use the Salaries Expense balance.', true),
+    T('Close supplies expense', /suppl/i, 'Entry 2 second credit account', 'Supplies Expense', 'Each expense account is credited to bring it to zero.'),
+    A('Supplies expense amount', d.supExp, 'Entry 2 Supplies Expense amount', 'Use the Supplies Expense from the adjusting entry.'),
+    T('Close utilities expense', /util/i, 'Entry 2 third credit account', 'Utilities Expense', 'Each expense account is credited to bring it to zero.'),
+    A('Utilities expense amount', c.util, 'Entry 2 Utilities Expense amount', 'Use the Utilities Expense from the adjusting entry.', true),
+    T('Close dividends debit account', RE, 'Entry 3 debit account', 'Retained Earnings', 'Dividends reduce Retained Earnings, so Retained Earnings is debited.'),
+    A('Close dividends debit amount', c.div, 'Entry 3 debit amount', 'Close the full Dividends balance.', true),
+    T('Close dividends credit account', /dividend/i, 'Entry 3 credit account', 'Dividends', 'Dividends has a debit balance, so it is credited to close it.'),
+    A('Close dividends credit amount', c.div, 'Entry 3 credit amount', 'Debits and credits must be equal.', true),
+    A('RE beginning', c.re0, 'Retained Earnings beginning balance', 'This is the starting credit balance.', true),
+    A('RE close revenue', c.rev, 'Retained Earnings: revenue closed in', 'Revenue is closed into Retained Earnings as a credit.', true),
+    A('RE close expenses', d.expTotal, 'Retained Earnings: expenses closed out', 'All three expenses are closed out as one debit.'),
+    A('RE close dividends', c.div, 'Retained Earnings: dividends closed out', 'Dividends are closed out as a debit.', true),
+    A('Retained earnings final balance', d.reEnd, 'Retained Earnings final balance', 'Beginning balance + revenue closed in − expenses closed out − dividends closed out.')
+  ];
+  return [];
+}
+
+const KEY_CELL = {1:'Cash balance', 2:'Total debits', 3:'Supplies adjusted balance', 4:'Total equity', 5:'Retained earnings final balance'};
+
+// Workpaper accuracy across all five phases (zero-expected cells are feedback only and are not scored)
+const BADGE_THRESHOLD = 85;
+const fmtPct = x => (Math.floor(x * 10) / 10).toString();  // floor to 1 decimal so 84.5 never displays as 85
+function workpaperScore() {
+  const d = derive(S);
+  const phases = [];
+  let correct = 0, total = 0;
+  for (let n = 1; n <= 5; n++) {
+    let pc = 0, pt = 0;
+    for (const sp of wpSpecs(n, S, d)) {
+      if (sp.zero) continue;
+      let ok = false;
+      if (sp.t === 'amt') {
+        const r = wpNum(n, sp.label);
+        ok = r.val !== undefined && Math.abs(r.val - sp.exp) < 0.5;
+      } else if (sp.t === 'acct') {
+        const el = wpEl(n, sp.label);
+        ok = !!el && sp.re.test((el.value || '').trim());
+      } else if (sp.t === 'cb') {
+        ok = cbCorrect(n, sp);
+      }
+      pt++; if (ok) pc++;
+    }
+    phases.push({n, correct: pc, total: pt});
+    correct += pc; total += pt;
+  }
+  const pct = total ? (correct / total) * 100 : 0;
+  return {correct, total, pct, passes: total > 0 && correct * 100 >= BADGE_THRESHOLD * total, phases};
+}
+// Returns an HTML string describing workpaper problems for phase n, or '' when there is nothing to report.
+function workpaperFeedback(n, enteredVal, reveal) {
+  if (!S) return '';
+  const d = derive(S);
+  const issues = [];
+  const blanks = [];
+  let cbTouched = false;
+  const specs = wpSpecs(n, S, d);
+  if (n === 4) cbTouched = specs.some(sp => sp.t === 'cb' && CB_COLS.some(col => { const e = wpEl(n, `${sp.label} ${col}`); return e && e.checked; }));
+  for (const sp of specs) {
+    if (sp.t === 'amt') {
+      const r = wpNum(n, sp.label);
+      if (r.missing) continue;
+      if (sp.zero) {
+        if (r.val !== undefined && Math.abs(r.val) >= 0.5) issues.push(`<strong>${sp.name}</strong>: you entered ${fmt(r.val)}. ${sp.why}`);
+        continue;
+      }
+      if (r.blank) { blanks.push(sp.name); continue; }
+      if (r.bad) { issues.push(`<strong>${sp.name}</strong>: that entry is not a number. Use numbers only.`); continue; }
+      if (Math.abs(r.val - sp.exp) >= 0.5) {
+        issues.push(`<strong>${sp.name}</strong>: you entered ${fmt(r.val)}. ${sp.why}${(reveal || sp.show) ? ` It should be ${fmt(sp.exp)}.` : ''}`);
+      }
+    } else if (sp.t === 'acct') {
+      const el = wpEl(n, sp.label);
+      if (!el) continue;
+      const txt = (el.value || '').trim();
+      if (!txt) { blanks.push(sp.name); continue; }
+      if (!sp.re.test(txt)) issues.push(`<strong>${sp.name}</strong>: the account you entered does not look right. ${sp.why}${reveal ? ` Expected: ${sp.expName}.` : ''}`);
+    } else if (sp.t === 'cb' && cbTouched) {
+      const anyChecked = CB_COLS.some(col => { const e = wpEl(n, `${sp.label} ${col}`); return e && e.checked; });
+      if (!anyChecked) blanks.push(sp.name || sp.key);
+      else if (!cbCorrect(n, sp)) issues.push(`<strong>${sp.name || sp.key}</strong> is classified incorrectly. ${sp.why}`);
+    }
+  }
+  // Trial balance self-check: do the totals match the columns the student built?
+  if (n === 2) {
+    const sum = labels => labels.reduce((t, l) => { const r = wpNum(n, l); return t + (r.val || 0); }, 0);
+    const dsum = sum(['Cash debit','Supplies debit','AP debit','Common Stock debit','RE debit','Dividends debit','Revenue debit','Salaries debit']);
+    const csum = sum(['Cash credit','Supplies credit','AP credit','Common Stock credit','RE credit','Dividends credit','Revenue credit','Salaries credit']);
+    const td = wpNum(n, 'Total debits'), tc = wpNum(n, 'Total credits');
+    if (td.val !== undefined && dsum > 0 && Math.abs(td.val - dsum) >= 0.5) issues.push(`<strong>Total debits</strong>: you entered ${fmt(td.val)}, but the debit amounts in your own trial balance add up to ${fmt(dsum)}. Re-add the column.`);
+    if (tc.val !== undefined && csum > 0 && Math.abs(tc.val - csum) >= 0.5) issues.push(`<strong>Total credits</strong>: you entered ${fmt(tc.val)}, but the credit amounts in your own trial balance add up to ${fmt(csum)}. Re-add the column.`);
+  }
+  // Does the vault code match the student's own workpaper?
+  const key = wpNum(n, KEY_CELL[n]);
+  const lead = [];
+  if (typeof enteredVal === 'number' && key.val !== undefined && Math.abs(key.val - enteredVal) >= 0.5 && Math.abs(enteredVal - VAULTS[n].answer) >= 0.5) {
+    const keyRight = Math.abs(key.val - VAULTS[n].answer) < 0.5;
+    lead.push(keyRight
+      ? `The vault code you entered (${fmt(enteredVal)}) does not match the answer in your workpaper (${fmt(key.val)}). Check that you copied the right number.`
+      : `The vault code you entered (${fmt(enteredVal)}) does not match the answer in your workpaper (${fmt(key.val)}), and the workpaper answer is also off. Fix the workpaper first.`);
+  }
+  const all = lead.concat(issues);
+  const shown = all.slice(0, 4);
+  let html = '';
+  if (shown.length) html += `<ul class="wp-fb-list">${shown.map(x => `<li>${x}</li>`).join('')}</ul>`;
+  if (all.length > shown.length) html += `<p class="wp-fb-more">${all.length - shown.length} more workpaper item${all.length - shown.length === 1 ? '' : 's'} to check after you fix these.</p>`;
+  if (blanks.length) html += `<p class="wp-fb-more">Not filled in yet: ${blanks.slice(0, 6).join(', ')}${blanks.length > 6 ? `, and ${blanks.length - 6} more` : ''}.</p>`;
+  return html ? `<div class="wp-fb"><span class="feedback-hint-label">Workpaper Check</span>${html}</div>` : '';
+}
+
+// ════════════════════════════════════════════════
+//  VAULT CHECK
+// ════════════════════════════════════════════════
+function checkVault(n) {
+  const input = document.getElementById(`v${n}-input`);
+  const feedback = document.getElementById(`v${n}-feedback`);
+  const attemptsEl = document.getElementById(`v${n}-attempts`);
+  const nextBtn = document.getElementById(`v${n}-next`);
+  const vaultEl = document.getElementById(`vault-${n}`);
+  const config = VAULTS[n];
+
+  const raw = input.value.trim();
+  if(!raw) {
+    input.style.borderColor='#e57373';
+    setTimeout(()=>{input.style.borderColor='var(--gold)';},800);
+    ann('Please enter a number before submitting.', true);
+    return;
+  }
+
+  // Workpaper gate: first submit with empty workpapers shows a warning and does not count as an attempt.
+  // Submitting again without workpapers is allowed (assignment still completes) but the badge is not earned.
+  const warning = document.getElementById(`wp-warn-${n}`);
+  const hasWork = phaseHasWorkpapers(n);
+  if (!hasWork && !wpWarned[n]) {
+    wpWarned[n] = true;
+    if (warning) warning.style.display = 'block';
+    ann('Your workpapers are empty. Complete them above before submitting the vault code. The Cycle Master badge requires workpapers in each room and at least 85% of your workpaper entries correct.', true);
+    return;
+  }
+  if (hasWork && warning) warning.style.display = 'none';
+
+  const val = parseAmount(raw);
+  attempts[n]++;
+  const maxAttempts = MAX_ATTEMPTS;
+  attemptsEl.textContent = `Attempt ${attempts[n]} of ${maxAttempts}`;
+
+  if(Math.abs(val - config.answer) < 0.5) {
+    // CORRECT
+    vaultsSolved[n] = true;
+    if (hasWork) workpapersFilled[n] = true;
+    feedback.className = 'vault-feedback correct show';
+    const isLast = (n === 5);
+    feedback.innerHTML = isLast
+      ? `<span class="feedback-hint-label">Master Code Confirmed</span>The case is solved. <strong>Post-Closing Retained Earnings: $${config.answer.toLocaleString()}</strong>. Fast Eddie's numbers don't match. Click the button below to close the file.`
+      : `<span class="feedback-hint-label">Vault Unlocked</span>Correct! Vault ${n} is open. <strong>$${config.answer.toLocaleString()}</strong> verified.`;
+    const wpOk = workpaperFeedback(n, val, false);
+    if (wpOk) feedback.innerHTML += wpOk.replace('Workpaper Check', 'Workpaper Check (your code is right, but review these)');
+    vaultEl.classList.add('unlocked');
+    input.disabled = true;
+    document.querySelector(`#vault-${n} .vault-btn`).disabled = true;
+    nextBtn.classList.add('show');
+    ann(isLast ? 'Master code correct. Click Close the File to finish.' : `Correct! Vault ${n} unlocked.`);
+  } else {
+    // WRONG
+    if(attempts[n] >= maxAttempts) {
+      // After the maximum number of attempts, reveal the answer
+      feedback.className = 'vault-feedback wrong show';
+      feedback.innerHTML = `<span class="feedback-hint-label">${maxAttempts} Attempts Reached — Answer Revealed</span>The correct code is <strong style="color:#f0c040;font-size:1.1rem;">$${config.answer.toLocaleString()}</strong>. ${getHint(n, maxAttempts)} ${n === 5 ? 'Review the answer, then close the file to see your results.' : 'Review the answer and proceed to the next phase.'}` + workpaperFeedback(n, val, true);
+      vaultEl.classList.add('unlocked');
+      input.disabled = true;
+      document.querySelector(`#vault-${n} .vault-btn`).disabled = true;
+      nextBtn.classList.add('show');
+      if(n === 5) nextBtn.textContent = 'See Results →';
+      ann(`${maxAttempts} attempts reached. Answer revealed: $${config.answer.toLocaleString()}. ${n === 5 ? 'Continue to see your results.' : 'Proceed to next phase.'}`);
+    } else {
+      feedback.className = 'vault-feedback wrong show';
+      let hintText = getHint(n, attempts[n], val);
+      feedback.innerHTML = `<span class="feedback-hint-label">Incorrect Code — Investigator Tip (${attempts[n]} of ${maxAttempts} attempts)</span>${hintText}` + workpaperFeedback(n, val, false);
+      input.style.borderColor='#e57373';
+      setTimeout(()=>{input.style.borderColor='var(--gold)';input.focus();},600);
+      ann('Incorrect. Read the hint and try again.', true);
+    }
+  }
+}
+
+function getHint(vaultNum, attemptNum, enteredVal) {
+  const cfg = VAULTS[vaultNum];
+  let hint = "Check your work carefully and try again. Make sure you're not including a dollar sign or comma in your answer.";
+  for(const h of cfg.hints){
+    if(attemptNum >= h.after) hint = h.msg;
+  }
+  // Targeted feedback: if the entry matches a common mistake, say what that mistake was
+  if (attemptNum < MAX_ATTEMPTS && typeof enteredVal === 'number' && cfg.diag) {
+    const hit = cfg.diag.find(d => Math.abs(d.val - enteredVal) < 0.5);
+    if (hit) return hit.msg + ' ' + (attemptNum <= 2 ? '' : hint);
+  }
+  if (attemptNum === 2 && cfg.hints.length && hint === cfg.hints[0].msg) {
+    hint += ' Still not matching? Recheck each T-account balance against the transactions in the briefing, then redo the final calculation.';
+  }
+  return hint;
+}
+
+
+// Enter key submits vault
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Enter') return;
+  const active = document.activeElement;
+  if(!active || !active.classList.contains('vault-input')) return;
+  const id = active.id;
+  const match = id.match(/v(\d)-input/);
+  if(match) checkVault(parseInt(match[1]));
+});
+</script>
+
+<!-- ── COPYRIGHT FOOTER ── -->
+<footer style="
+  position: relative; z-index: 10;
+  background: var(--navy);
+  border-top: 2px solid var(--gold);
+  padding: 16px 24px;
+  text-align: center;
+">
+  <p style="
+    font-family: 'Courier Prime', monospace;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.5px;
+    line-height: 1.7;
+    margin: 0;
+  ">
+    &copy; 2026 Jennifer Coon, CIA, CFE. All rights reserved.<br>
+    <em>Ghost Controller: Operation Clean Sweep</em> is an original educational game for introductory financial accounting.<br>
+    Free to use with students for <strong style="color: var(--gold);">non-commercial educational purposes</strong>.<br>
+    Redistribution, modification for distribution, or sale requires written permission. Contact: <a href="mailto:jcoonconsulting@gmail.com" style="color: var(--gold);">jcoonconsulting@gmail.com</a>
+  </p>
+</footer>
+
+</body>
+</html>
