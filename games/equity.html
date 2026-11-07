@@ -296,17 +296,17 @@ function scormComplete(pct) {
         <svg id="bullseye-svg" viewBox="0 0 320 320" style="max-width:280px;width:100%;" role="img" focusable="false" aria-label="Share structure target diagram showing authorized as the outer ring, issued inside it, outstanding in the center, and treasury as a red wedge when shares are repurchased">
           <title>Share Structure Target Diagram</title>
           <circle id="ring-auth-bg"   cx="160" cy="160" r="148" fill="#4691CE" opacity="0.20" stroke="#4691CE" stroke-width="3"/>
-          <circle id="ring-issued-bg" cx="160" cy="160" r="108" fill="#262D68" opacity="0.28" stroke="#262D68" stroke-width="3"/>
-          <circle id="ring-out-bg"    cx="160" cy="160" r="72"  fill="#0A713A" opacity="0.45" stroke="#0A713A" stroke-width="3"/>
+          <circle id="ring-issued-bg" cx="160" cy="160" r="56" fill="#262D68" opacity="0.28" stroke="#262D68" stroke-width="3"/>
+          <circle id="ring-out-bg"    cx="160" cy="160" r="56"  fill="#0A713A" stroke="#0A713A" stroke-width="3"/>
           <path   id="treasury-wedge" d="" fill="#b91c1c" opacity="0.55"/>
           <text x="160" y="24"  text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#1a5fa0" font-weight="700" pointer-events="none">AUTHORIZED</text>
           <text id="auth-count"        x="160" y="39"  text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#1a5fa0" pointer-events="none">10,000 shares</text>
-          <text x="160" y="80"  text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#fff" font-weight="700" pointer-events="none">ISSUED</text>
-          <text id="issued-count"      x="160" y="94"  text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#fff" pointer-events="none">4,000 shares</text>
-          <text x="160" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#fff" font-weight="700" pointer-events="none">OUTSTANDING</text>
-          <text id="out-count"         x="160" y="164" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#fff" pointer-events="none">4,000 shares</text>
+          <text id="issued-label" x="160" y="87" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#262D68" font-weight="700" pointer-events="none">ISSUED</text>
+          <text id="issued-count"      x="160" y="100"  text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#262D68" pointer-events="none">4,000 shares</text>
+          <text x="160" y="155" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#fff" font-weight="700" pointer-events="none">OUTSTANDING</text>
+          <text id="out-count"         x="160" y="169" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#fff" pointer-events="none">4,000 shares</text>
           <text id="treasury-label"     x="255" y="210" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#b91c1c" font-weight="700" pointer-events="none" opacity="0">TREASURY</text>
-          <text id="treasury-count-svg" x="255" y="224" text-anchor="middle" font-family="Georgia, serif" font-size="10" fill="#b91c1c" pointer-events="none" opacity="0">0 shares</text>
+          <text id="treasury-count-svg" x="255" y="224" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#b91c1c" pointer-events="none" opacity="0">0 shares</text>
         </svg>
 
         <div id="share-counts" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
@@ -614,10 +614,12 @@ function updateDiagram(auth, issued, outstanding, treasury) {
   document.getElementById('chip-auth-val').textContent    = auth.toLocaleString();
   document.getElementById('chip-issued-val').textContent  = issued.toLocaleString();
   document.getElementById('chip-out-val').textContent     = outstanding.toLocaleString();
-  const maxR = 108;
+  const maxR = 140;
   const issuedR = Math.max(20, Math.round(maxR * (issued / 10000)));
   const outR    = Math.max(12, Math.round(issuedR * (outstanding / Math.max(issued,1))));
   document.getElementById('ring-issued-bg').setAttribute('r', issuedR);
+  document.getElementById('issued-label').setAttribute('y', 160 - issuedR - 17);
+  document.getElementById('issued-count').setAttribute('y', 160 - issuedR - 4);
   document.getElementById('ring-out-bg').setAttribute('r', outR);
   if (treasury > 0) {
     document.getElementById('chip-treasury').style.display = 'inline-block';
